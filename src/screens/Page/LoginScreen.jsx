@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import {
     View,
@@ -13,6 +14,7 @@ import {
 
 const LoginScreen = () => {
     const [remember, setRemember] = useState(false);
+    const navigation = useNavigation()
 
     return (
         <View style={styles.container}>
@@ -53,7 +55,7 @@ const LoginScreen = () => {
                         </TouchableOpacity>
 
                         {/* Signup text */}
-                        <TouchableOpacity>
+                        <TouchableOpacity onPress={() => navigation.navigate('RegistrationScreen')}>
                              <Text style={styles.signupText}>
                             Don’t have an account? <Text style={styles.signupLink}>Sign up</Text>
                         </Text>
@@ -83,9 +85,9 @@ const styles = StyleSheet.create({
         width: '100%',
 
     },
-    title: { color: '#fff', fontSize: 30, fontWeight: '600', marginBottom: 25 },
-    illustration: { width: 250, height: 250 },
-    form: { padding: 20, marginTop: 30, width: '100%' },
+    title: { color: '#fff', fontSize: 26, fontWeight: '600', marginBottom: 25 },
+    illustration: { width: 200, height: 200 },
+    form: { padding: 20, marginTop: 50, width: '100%' },
     input: {
         backgroundColor: '#fddde6',
         borderRadius: 25,
