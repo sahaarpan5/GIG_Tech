@@ -6,6 +6,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Welcome from '../Page/Welcome';
 import LoginScreen from '../Page/LoginScreen';
 import RegistrationScreen from '../Page/RegistrationScreen';
+import AttendanceReport from '../Page/AttendanceReport';
+import DashboardScreen from '../Page/DashboardScreen';
+import AttendanceDashboard from '../Page/AttendanceDashboard';
+import AttendanceManage from '../Page/AttendanceManage';
+
+
 
 const Stack = createNativeStackNavigator();
 
@@ -19,7 +25,11 @@ const AppNavigator = () => {
         <Stack.Screen name="Welcome" component={Welcome} />
         <Stack.Screen name="LoginScreen" component={LoginScreen} />
         <Stack.Screen name="RegistrationScreen" component={RegistrationScreen} />
-       
+        <Stack.Screen name="AttendanceReport" component={AttendanceReport} />
+        <Stack.Screen name="DashboardScreen" component={DashboardScreen} />
+        <Stack.Screen name="AttendanceDashboard" component={AttendanceDashboard} />
+         <Stack.Screen name="AttendanceManage" component={AttendanceManage} />
+
       </Stack.Navigator>
 
     </SafeAreaProvider>
