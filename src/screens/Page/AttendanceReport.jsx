@@ -161,7 +161,7 @@ const AttendanceReport = () => {
                             <Image source={require('../../asset/back-icon.png')} style={styles.headerIcon}></Image>
                         </TouchableOpacity>
                         <Text style={styles.headerTitle}>Attendance Report</Text>
-                        <TouchableOpacity>
+                        <TouchableOpacity onPress={()=>navigation.replace('DashboardScreen')}>
                             <Image source={require('../../asset/home-icon.png')} style={styles.headerIcon}></Image>
                         </TouchableOpacity>
 

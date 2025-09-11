@@ -29,7 +29,7 @@ const DashboardScreen = () => {
                     </View>
 
                     {/* Title */}
-                    <Text style={styles.sectionTitle}>Your Assign Service Line</Text>
+                    <Text style={styles.sectionTitle}>Your Assigned Service Line</Text>
 
 
                     <View style={styles.card}>
