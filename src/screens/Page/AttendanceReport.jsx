@@ -183,22 +183,27 @@ const AttendanceReport = () => {
                         </TouchableOpacity>
 
                     </View>
-                    <View style={{backgroundColor:'#FFFFFF',paddingTop:10}}>
-                         {renderMonthTabs()}
+                    <View style={{ backgroundColor: '#FFFFFF', paddingTop: 10 }}>
+                        {renderMonthTabs()}
                     </View>
-                    
+
                     <View style={styles.container}>
-                       
+
                         <FlatList
                             data={attendanceData}
                             keyExtractor={(item, index) => index.toString()}
-                             
+
                             contentContainerStyle={{
-                                
+
                                 paddingHorizontal: 8
                             }}
                             renderItem={renderAttendanceCard}
-                           
+                            ListEmptyComponent={
+                                <Text style={{ textAlign: 'center', marginTop: 20, color: '#131212ff' }}>
+                                    No attendance data available.
+                                </Text>
+                            }
+
                         />
                     </View>
                 </View>
@@ -218,7 +223,7 @@ export default AttendanceReport;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop:30,
+        paddingTop: 30,
         backgroundColor: '#fff',
         justifyContent: 'flex-start',
     },
@@ -241,7 +246,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         marginBottom: 0,
         paddingBottom: 0,
-        marginTop: 0, 
+        marginTop: 0,
 
     },
     monthButton: {
