@@ -1,5 +1,6 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
     View,
     Text,
@@ -13,7 +14,65 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 // npm install react-native-vector-icons
 
 const DashboardScreen = () => {
-    const navigation=useNavigation();
+    const navigation = useNavigation();
+    const [username, setUsername] = useState('');
+    const [slActive, setSLActive] = useState(0);
+    const [slName, setSLName] = useState('');
+    const [slLocation, setSLLocation] = useState('');
+
+    const [slPosition, setSLPosition] = useState('');
+    const [slWorkType, setSLWorkType] = useState('');
+    const [slWorkStrtDate, setSLWorkStrtDate] = useState('');
+    const [slWorkEndDate, setSLWorkEndDate] = useState('');
+    const [slOffice, setSLOffice] = useState('');
+
+
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const storedUserName = await AsyncStorage.getItem('UserName');
+                setUsername(storedUserName);
+
+                const storedSLActive = await AsyncStorage.getItem('SLIsActive');
+                setSLActive(storedSLActive ? parseInt(storedSLActive, 10) : 0);
+
+
+                const storedSLName = await AsyncStorage.getItem('ClientName');
+                setSLName(storedSLName);
+
+                const storedSLLocation = await AsyncStorage.getItem('ClientOfficeAddress');
+                setSLLocation(storedSLLocation);
+
+                const storedSLPosition = await AsyncStorage.getItem('SLPositionName');
+                setSLPosition(storedSLPosition);
+
+
+                 const storedSLWorkType = await AsyncStorage.getItem('SLWorkType');
+                setSLWorkType(storedSLWorkType);
+
+                 const storedStartDate= await AsyncStorage.getItem('SLStartDate');
+                setSLWorkStrtDate(storedStartDate);
+
+                const storedEndDate= await AsyncStorage.getItem('SLEndDate');
+                setSLWorkEndDate(storedEndDate);
+
+                const storedOffice= await AsyncStorage.getItem('ClientOfficeName');
+                setSLOffice(storedOffice);
+
+
+
+
+
+
+            } catch (error) {
+                console.error('Error loading stored data:', error);
+            }
+        };
+
+        loadData();
+    }, []);
+
+    console.log('slActive', slActive);
     return (
         <SafeAreaProvider>
             <SafeAreaView style={{ flex: 1, backgroundColor: '#E63665' }}>
@@ -21,47 +80,77 @@ const DashboardScreen = () => {
                 <ScrollView style={styles.container}>
                     {/* Header */}
                     <View style={styles.header}>
-                        <Text style={styles.headerTitle}>Hi! Arpan Saha</Text>
-
-
-
+                        <Text style={styles.headerTitle}>Hi! {username}</Text>
+                        <TouchableOpacity onPress={() => navigation.replace('LoginScreen')}>
+                            <Image source={require('../../asset/turn-off.png')} ></Image>
+                        </TouchableOpacity>
 
                     </View>
 
-                    {/* Title */}
-                    <Text style={styles.sectionTitle}>Your Assigned Service Line</Text>
-
-
-                    <View style={styles.card}>
-                        <View style={styles.cardRow}>
-                            <Image source={require('../../asset/slname-icon.png')} ></Image>
-                            <Text style={styles.label}>SL Name</Text>
-                            <Text style={styles.value}>Software Engineer</Text>
+                    {slActive === 0 ? (
+                        <View style={styles.noSLBox}>
+                            <Text style={styles.noSLText}>
+                                You are not assigned to any SL
+                            </Text>
                         </View>
+                    ) : (
+                        <>
 
-                        <View style={styles.cardRow}>
-                            <Image source={require('../../asset/location-icon.png')} ></Image>
-                            <Text style={styles.label}>SL Location</Text>
-                            <Text style={styles.value}>Kolkata</Text>
-                        </View>
 
-                        <View style={styles.cardRow}>
-                            <Image source={require('../../asset/date-icon.png')} ></Image>
-                            <Text style={styles.label}>Start Date</Text>
-                            <Text style={styles.value}>01 Aug 2025</Text>
-                        </View>
+                            {/* Title */}
+                            <Text style={styles.sectionTitle}>Your Assigned Service Line</Text>
 
-                        <View style={styles.cardRow}>
-                            <Image source={require('../../asset/date-icon.png')} ></Image>
-                            <Text style={styles.label}>End Date</Text>
-                            <Text style={styles.value}>11 Aug 2025</Text>
-                        </View>
-                    </View>
 
-                    {/* Button */}
-                    <TouchableOpacity style={styles.attendanceButton} onPress={()=>navigation.navigate('AttendanceDashboard')}>
-                        <Text style={styles.attendanceText}>Mark Attendance</Text>
-                    </TouchableOpacity>
+                            <View style={styles.card}>
+                                <View style={styles.cardRow}>
+                                    <Image source={require('../../asset/slname-icon.png')} ></Image>
+                                    <Text style={styles.label}>SL Name</Text>
+                                    <Text style={styles.value}>{slName}</Text>
+                                </View>
+
+                                 <View style={styles.cardRow}>
+                                    <Image source={require('../../asset/office-location.png')} ></Image>
+                                    <Text style={styles.label}>SL Office</Text>
+                                    <Text style={styles.value}>{slOffice}</Text>
+                                </View>
+
+                                <View style={styles.cardRow}>
+                                    <Image source={require('../../asset/location-icon.png')} ></Image>
+                                    <Text style={styles.label}>SL Location</Text>
+                                    <Text style={styles.value}>{slLocation}</Text>
+                                </View>
+
+                                <View style={styles.cardRow}>
+                                    <Image source={require('../../asset/manager.png')} ></Image>
+                                    <Text style={styles.label}>Position</Text>
+                                    <Text style={styles.value}>{slPosition}</Text>
+                                </View>
+
+                                 <View style={styles.cardRow}>
+                                    <Image source={require('../../asset/suitcase.png')} ></Image>
+                                    <Text style={styles.label}>Work Type</Text>
+                                    <Text style={styles.value}>{slWorkType}</Text>
+                                </View>
+
+                                <View style={styles.cardRow}>
+                                    <Image source={require('../../asset/date-icon.png')} ></Image>
+                                    <Text style={styles.label}>Start Date</Text>
+                                    <Text style={styles.value}>{slWorkStrtDate}</Text>
+                                </View>
+
+                                <View style={styles.cardRow}>
+                                    <Image source={require('../../asset/date-icon.png')} ></Image>
+                                    <Text style={styles.label}>End Date</Text>
+                                    <Text style={styles.value}>{slWorkEndDate}</Text>
+                                </View>
+                            </View>
+
+                            {/* Button */}
+                            <TouchableOpacity style={styles.attendanceButton} onPress={() => navigation.navigate('AttendanceDashboard')}>
+                                <Text style={styles.attendanceText}>Mark Attendance</Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
                 </ScrollView>
             </SafeAreaView>
         </SafeAreaProvider>
@@ -82,7 +171,9 @@ const styles = StyleSheet.create({
         backgroundColor: "#f50057",
         paddingHorizontal: 16,
         paddingVertical: 12,
-        justifyContent: "center",
+        justifyContent: "space-between",
+        flexDirection: 'row',
+        height:70
     },
     headerTitle: {
         color: "#fff",
@@ -147,5 +238,17 @@ const styles = StyleSheet.create({
         width: 20,
         height: 20,
 
+    },
+    noSLBox: {
+        margin: 20,
+        padding: 16,
+        borderRadius: 8,
+        backgroundColor: "#ffe6e9",
+        alignItems: "center",
+    },
+    noSLText: {
+        color: "#d32f2f",
+        fontSize: 16,
+        fontWeight: "600",
     },
 });

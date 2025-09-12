@@ -69,6 +69,55 @@ const AttendanceManage = () => {
     );
   };
 
+  const markAttendance = async () => {
+    if (!location) {
+      Alert.alert('Location not available');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Get EmpCode (you can fetch from AsyncStorage if available)
+      const empCode = await AsyncStorage.getItem('UserCode'); // same as login saved
+      const latitude = location.latitude.toString();
+      const longitude = location.longitude.toString();
+
+      const response = await axios.post(
+        API.POST_ATTENDANCE,
+        {
+          EmpCode: empCode || 'GC000003', // fallback if empty
+          Latitude: latitude,
+          Longitude: longitude,
+        }
+      );
+
+      const res = response.data;
+      console.log('Attendance Response:', res);
+
+      if (res.Response_Code === '101') {
+        setLoading(false);
+        Alert.alert(
+          'Success',
+          'Attendance marked successfully!',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.replace('AttendanceDashboard'), // redirect
+            },
+          ]
+        );
+      } else {
+        setLoading(false);
+        Alert.alert('Failed', res.Response_Message || 'Failed to mark attendance.');
+      }
+    } catch (error) {
+      setLoading(false);
+      console.error('API Error:', error);
+      Alert.alert('Error', 'Something went wrong while marking attendance.');
+    }
+  };
+
   useEffect(() => {
     const getLocation = async () => {
       try {
@@ -142,45 +191,7 @@ const AttendanceManage = () => {
   }, []);
 
 
-  const markAttendance = async () => {
-    if (!location) {
-      Alert.alert('Location not available');
-      return;
-    }
 
-    try {
-      const loginID = await AsyncStorage.getItem('UserID');
-      const password = await AsyncStorage.getItem('Password');
-      const clientID = await AsyncStorage.getItem('ClientID');
-      const securityCode = await AsyncStorage.getItem('SecurityCode');
-      setLoading(true);
-
-      const url = API.POST_ATTENDANCE(
-        loginID,
-        password,
-        clientID,
-        securityCode,
-        address,
-        location.longitude,
-        location.latitude
-      );
-
-      const response = await axios.get(url);
-
-      if (response?.data?.responseStatus === true) {
-        setLoading(false);
-        Alert.alert('Success', 'Attendance marked successfully.');
-
-      } else {
-        setLoading(false);
-        Alert.alert('Failed', response?.data?.responseText || 'Failed to mark attendance.');
-      }
-    } catch (error) {
-      setLoading(false);
-      console.error('API Error:', error);
-      Alert.alert('Error', 'An error occurred while marking attendance.');
-    }
-  };
 
 
 
@@ -196,8 +207,8 @@ const AttendanceManage = () => {
               <TouchableOpacity onPress={() => navigation.goBack()}>
                 <Image source={require('../../asset/back-icon.png')} style={styles.headerIcon}></Image>
               </TouchableOpacity>
-               <Text style={styles.headerTitle}>Attendance Manage</Text>
-              <TouchableOpacity onPress={()=>navigation.replace('DashboardScreen')}>
+              <Text style={styles.headerTitle}>Attendance Manage</Text>
+              <TouchableOpacity onPress={() => navigation.replace('DashboardScreen')}>
                 <Image source={require('../../asset/home-icon.png')} style={styles.headerIcon}></Image>
               </TouchableOpacity>
 
@@ -229,7 +240,7 @@ const AttendanceManage = () => {
               </View>
 
               {/* Fingerprint + Attendance Text */}
-              <TouchableOpacity style={styles.fingerprintContainer} onPress={()=> Alert.alert('Success', 'Attendance marked successfully.')}>
+              <TouchableOpacity style={styles.fingerprintContainer} onPress={markAttendance}>
                 <Image
                   source={require('../../asset/fingerprint-scan.png')} // Replace with your fingerprint icon
                   style={styles.fingerprint}
@@ -242,7 +253,7 @@ const AttendanceManage = () => {
               <View style={{ height: 40 }}></View>
             </View>
 
-           
+
           </View>
         </View>
       </SafeAreaView>
