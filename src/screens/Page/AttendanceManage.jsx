@@ -245,7 +245,7 @@ const AttendanceManage = () => {
                   source={require('../../asset/fingerprint-scan.png')} // Replace with your fingerprint icon
                   style={styles.fingerprint}
                 />
-                <Text style={styles.attendanceText}>Mark{'\n'}Your Attendance</Text>
+                <Text style={styles.attendanceText}>Mark{'\n'}Check-In/Check-Out</Text>
               </TouchableOpacity>
 
               {/* Attendance Report Button */}
