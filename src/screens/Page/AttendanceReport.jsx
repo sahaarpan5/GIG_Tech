@@ -90,7 +90,8 @@ const AttendanceReport = () => {
                     date: item.AttDate,
                     punchIn: item.PunchIn || "-",
                     punchOut: item.PunchOut || "-",
-                    status: "P"
+                    status: "P",
+                    workingHours: calculateWorkingHours(item.PunchIn, item.PunchOut)
                 }));
                 setAttendanceData(formatted);
             } else {
@@ -104,6 +105,37 @@ const AttendanceReport = () => {
             setLoading(false);
         }
     };
+
+    function parseTime12h(timeStr) {
+    if (!timeStr || timeStr === "-") return null;
+
+    const [time, modifier] = timeStr.split(" "); // "10:38", "AM"
+    if (!time || !modifier) return null;
+
+    let [hours, minutes] = time.split(":").map(Number);
+    if (modifier.toUpperCase() === "PM" && hours < 12) hours += 12;
+    if (modifier.toUpperCase() === "AM" && hours === 12) hours = 0;
+
+    return { hours, minutes };
+}
+
+function calculateWorkingHours(punchIn, punchOut) {
+    const inTime = parseTime12h(punchIn);
+    const outTime = parseTime12h(punchOut);
+
+    if (!inTime || !outTime) return "-";
+
+    const inDate = new Date(0, 0, 0, inTime.hours, inTime.minutes);
+    const outDate = new Date(0, 0, 0, outTime.hours, outTime.minutes);
+
+    let diffMs = outDate - inDate;
+    if (diffMs < 0) diffMs += 24 * 60 * 60 * 1000; // handle next-day punch out
+
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    return `${hours}h ${minutes}m`;
+}
 
 
 
@@ -147,8 +179,8 @@ const AttendanceReport = () => {
                     <Text style={styles.value}>{item.punchOut}</Text>
                 </View>
                 <View style={styles.row}>
-                    <Text style={styles.label}>Status</Text>
-                    <Text style={[styles.value, { color: '#1c8d2bff' }]}>{item.status}</Text>
+                    <Text style={styles.label}>Working Hrs.</Text>
+                    <Text style={[styles.value, { color: '#1c8d2bff' }]}>{item.workingHours}</Text>
                 </View>
             </View>
         </View>
