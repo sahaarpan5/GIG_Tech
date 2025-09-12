@@ -95,7 +95,7 @@ const AttendanceReport = () => {
                 setAttendanceData(formatted);
             } else {
                 setAttendanceData([]);
-                Alert.alert("No Data", res.Response_Message || "No attendance found");
+                Alert.alert("No Data", res.Response_Message || "No data found");
             }
         } catch (error) {
             console.error("Error fetching attendance:", error);
@@ -177,7 +177,7 @@ const AttendanceReport = () => {
                         <TouchableOpacity onPress={() => navigation.goBack()}>
                             <Image source={require('../../asset/back-icon.png')} style={styles.headerIcon}></Image>
                         </TouchableOpacity>
-                        <Text style={styles.headerTitle}>Attendance Report</Text>
+                        <Text style={styles.headerTitle}>Report</Text>
                         <TouchableOpacity onPress={() => navigation.replace('DashboardScreen')}>
                             <Image source={require('../../asset/home-icon.png')} style={styles.headerIcon}></Image>
                         </TouchableOpacity>
@@ -200,7 +200,7 @@ const AttendanceReport = () => {
                             renderItem={renderAttendanceCard}
                             ListEmptyComponent={
                                 <Text style={{ textAlign: 'center', marginTop: 20, color: '#131212ff' }}>
-                                    No attendance data available.
+                                    No  data available.
                                 </Text>
                             }
 

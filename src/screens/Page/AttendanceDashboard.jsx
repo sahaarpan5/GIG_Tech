@@ -43,7 +43,7 @@ const AttendanceDashboard = () => {
                         <TouchableOpacity onPress={() => navigation.goBack()}>
                             <Image source={require('../../asset/back-icon.png')} style={styles.headerIcon}></Image>
                         </TouchableOpacity>
-                        <Text style={styles.headerTitle}>Attendance</Text>
+                        <Text style={styles.headerTitle}>Check-In / Check-Out</Text>
                         <TouchableOpacity onPress={()=>navigation.replace('DashboardScreen')}>
                             <Image source={require('../../asset/home-icon.png')} style={styles.headerIcon}></Image>
                         </TouchableOpacity>
@@ -59,11 +59,11 @@ const AttendanceDashboard = () => {
                             <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
                                 <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('AttendanceManage')}>
                                     <Image source={require('../../asset/pointing-up.png')} style={styles.menuICon}></Image>
-                                    <Text style={styles.menuTextText}> Attendance{'\n'}Manage</Text>
+                                    <Text style={styles.menuTextText}>Manage</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('AttendanceReport')}>
                                     <Image source={require('../../asset/document.png')} style={styles.menuICon}></Image>
-                                    <Text style={styles.menuTextText}>Attendance{'\n'}Report</Text>
+                                    <Text style={styles.menuTextText}>Report</Text>
                                 </TouchableOpacity>
                             </View>
                            

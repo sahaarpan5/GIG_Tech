@@ -147,7 +147,8 @@ const DashboardScreen = () => {
 
                             {/* Button */}
                             <TouchableOpacity style={styles.attendanceButton} onPress={() => navigation.navigate('AttendanceDashboard')}>
-                                <Text style={styles.attendanceText}>Mark Attendance</Text>
+                                <Image source={require('../../asset/attendance-icon.png')} ></Image>
+                                <Text style={styles.attendanceText}>Check-In / Check-Out</Text>
                             </TouchableOpacity>
                         </>
                     )}
@@ -228,11 +229,14 @@ const styles = StyleSheet.create({
         marginTop: 20,
         paddingVertical: 12,
         alignItems: "center",
+        justifyContent:'center',
+        flexDirection:'row'
     },
     attendanceText: {
         color: "#f50057",
         fontSize: 16,
         fontWeight: "600",
+        marginLeft:5
     },
     headerIcon: {
         width: 20,
