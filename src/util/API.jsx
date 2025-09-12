@@ -5,6 +5,9 @@ const API = {
 
   POST_ATTENDANCE: `${BASE_URL}/GigAttendance/PostGigEmpAttendance`,
 
+  GET_ATTENDANCE: `${BASE_URL}/GigAttendance/ShowGigEmpAttendance`,
+
+
 };
 
 // Add more endpoints here as needed

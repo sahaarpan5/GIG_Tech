@@ -11,6 +11,7 @@ import {
     Image,
     Platform,
     StatusBar,
+    Alert,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -39,6 +40,15 @@ const AttendanceReport = () => {
     const navigation = useNavigation();
     const reportType = 1;
 
+    const extraItem = {
+        key: 'manual-1',
+        date: '15th',
+        day: 'Sun',
+        punchIn: '09:30',
+        punchOut: '18:00',
+        status: 'P'
+    };
+
 
 
     useEffect(() => {
@@ -51,58 +61,52 @@ const AttendanceReport = () => {
         }
     }, [selectedMonth]);
 
-    // useEffect(() => {
-    //     fetchAttendance(selectedMonth);
-    // }, [selectedMonth]);
+    useEffect(() => {
+        fetchAttendance(selectedMonth);
+    }, [selectedMonth]);
 
 
+    const fetchAttendance = async (monthName) => {
+        setLoading(true);
+        try {
+            // get employee code from AsyncStorage (set during login)
+            const empCode = await AsyncStorage.getItem('UserCode');
+            const year = new Date().getFullYear().toString();
 
-    const getFinancialYear = (monthName) => {
-        const monthIndex = months.indexOf(monthName); // months is your months array
-        const currentYear = new Date().getFullYear();
+            const response = await axios.post(
+                API.GET_ATTENDANCE,
+                {
+                    EmpCode: empCode || "GC000006", // fallback
+                    AttYear: year,
+                    AttMonth: monthName
+                }
+            );
 
-        if (monthIndex >= 0 && monthIndex <= 2) {
-            // Jan, Feb, Mar
-            return `${currentYear - 1}-${currentYear}`;
-        } else {
-            // Apr to Dec
-            return `${currentYear}-${currentYear + 1}`;
+            const res = response.data;
+            console.log("Attendance API Response:", res);
+
+            if (res.Response_Code === "101") {
+                const formatted = res.Response_Data.map((item) => ({
+                    date: item.AttDate,
+                    punchIn: item.PunchIn || "-",
+                    punchOut: item.PunchOut || "-",
+                    status: "P"
+                }));
+                setAttendanceData(formatted);
+            } else {
+                setAttendanceData([]);
+                Alert.alert("No Data", res.Response_Message || "No attendance found");
+            }
+        } catch (error) {
+            console.error("Error fetching attendance:", error);
+            Alert.alert("Error", "Something went wrong while fetching attendance.");
+        } finally {
+            setLoading(false);
         }
     };
 
-    // const fetchAttendance = async (monthName) => {
-    //     const financialYear = getFinancialYear(monthName);
-    //     setLoading(true);
-    //     try {
-    //         const storedLoginID = await AsyncStorage.getItem('UserID');
-    //         const securityCode = await AsyncStorage.getItem('SecurityCode');
 
 
-    //         const response = await axios.get(API.FETCH_ATTENDANCE(
-    //             storedLoginID,
-    //             financialYear,
-    //             monthName,
-    //             reportType,
-    //             securityCode
-    //         ));
-
-    //         const data = response.data?.responseData || [];
-
-    //         const formatted = data.map((item) => ({
-    //             date: item.Date?.split(' ')[0]?.slice(0, 2) ?? '',
-    //             day: item.Day?.slice(0, 3) ?? '',
-    //             punchIn: item.Time ?? '',
-    //             punchOut: item.LogoutTime ?? '',
-    //             status: item.Status ?? '',
-    //         }));
-
-    //         setAttendanceData(formatted);
-    //     } catch (error) {
-    //         console.error('Error fetching attendance:', error);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
 
     const renderMonthTabs = () => (
         <ScrollView
@@ -129,8 +133,8 @@ const AttendanceReport = () => {
     const renderAttendanceCard = ({ item }) => (
         <View style={styles.card}>
             <View style={styles.dateContainer}>
-                <Text style={styles.date}>{item.date}</Text>
-                <Text style={styles.day}>{item.day}</Text>
+                <Text style={styles.date}>{getDayWithSuffix(item.date)}</Text>
+
             </View>
             <View style={styles.detailsContainer}>
 
@@ -144,11 +148,24 @@ const AttendanceReport = () => {
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Status</Text>
-                    <Text style={[styles.value, { color: '#D63333' }]}>{item.status}</Text>
+                    <Text style={[styles.value, { color: '#1c8d2bff' }]}>{item.status}</Text>
                 </View>
             </View>
         </View>
     );
+
+    const getDayWithSuffix = (day) => {
+        if (!day) return "";
+        const d = parseInt(day, 10);
+        if (isNaN(d)) return day;
+        if (d > 3 && d < 21) return `${d}th`; // 11th, 12th, 13th...
+        switch (d % 10) {
+            case 1: return `${d}st`;
+            case 2: return `${d}nd`;
+            case 3: return `${d}rd`;
+            default: return `${d}th`;
+        }
+    };
 
     return (
         <SafeAreaProvider>
@@ -161,19 +178,27 @@ const AttendanceReport = () => {
                             <Image source={require('../../asset/back-icon.png')} style={styles.headerIcon}></Image>
                         </TouchableOpacity>
                         <Text style={styles.headerTitle}>Attendance Report</Text>
-                        <TouchableOpacity onPress={()=>navigation.replace('DashboardScreen')}>
+                        <TouchableOpacity onPress={() => navigation.replace('DashboardScreen')}>
                             <Image source={require('../../asset/home-icon.png')} style={styles.headerIcon}></Image>
                         </TouchableOpacity>
 
                     </View>
+                    <View style={{backgroundColor:'#FFFFFF',paddingTop:10}}>
+                         {renderMonthTabs()}
+                    </View>
+                    
                     <View style={styles.container}>
-                        {renderMonthTabs()}
+                       
                         <FlatList
                             data={attendanceData}
                             keyExtractor={(item, index) => index.toString()}
-                            contentContainerStyle={styles.listContainer}
+                             
+                            contentContainerStyle={{
+                                
+                                paddingHorizontal: 8
+                            }}
                             renderItem={renderAttendanceCard}
-                            ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20, color: '#131212ff' }}>No attendance data available.</Text>}
+                           
                         />
                     </View>
                 </View>
@@ -193,8 +218,9 @@ export default AttendanceReport;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        paddingTop:30,
         backgroundColor: '#fff',
-        paddingTop: 40,
+        justifyContent: 'flex-start',
     },
     header: {
         flexDirection: 'row',
@@ -215,6 +241,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         marginBottom: 0,
         paddingBottom: 0,
+        marginTop: 0, 
 
     },
     monthButton: {
@@ -240,6 +267,8 @@ const styles = StyleSheet.create({
         paddingTop: 0,
         paddingBottom: 5,
         marginTop: 0,
+        justifyContent: 'flex-start',
+        flexGrow: 1
 
     },
     card: {
@@ -262,7 +291,7 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     date: {
-        fontSize: 20,
+        fontSize: 16,
         fontWeight: 'bold',
         color: '#000',
     },
