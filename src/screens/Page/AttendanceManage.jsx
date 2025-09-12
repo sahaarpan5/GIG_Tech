@@ -99,7 +99,7 @@ const AttendanceManage = () => {
         setLoading(false);
         Alert.alert(
           'Success',
-          'Punch-In marked successfully!',
+          'You have successfully punched in!',
           [
             {
               text: 'OK',
