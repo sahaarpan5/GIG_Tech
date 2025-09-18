@@ -8,12 +8,16 @@ import {
     ScrollView,
     TouchableOpacity,
     Image,
+    StatusBar,
 } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 const JobDetailsScreen = () => {
     const navigation = useNavigation();
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaProvider>
+              <SafeAreaView style={styles.container}>
+                <StatusBar backgroundColor="#E63665" barStyle="dark-content" />
             <View style={styles.toolBar}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Image source={require('../../asset/back-icon.png')} style={styles.headerIcon}></Image>
@@ -24,7 +28,7 @@ const JobDetailsScreen = () => {
                 </TouchableOpacity>
 
             </View>
-            <ScrollView contentContainerStyle={{ paddingBottom: 30 }}>
+            <ScrollView style={{ paddingBottom: 30,backgroundColor:'#FFF' }}>
                 {/* Job Header */}
                 <View style={styles.header}>
                     <View style={styles.iconBox}>
@@ -88,6 +92,8 @@ const JobDetailsScreen = () => {
                 </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>
+        </SafeAreaProvider>
+      
     );
 };
 
@@ -97,6 +103,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#fff",
+        backgroundColor: '#E63665'
     },
     header: {
         alignItems: "center",

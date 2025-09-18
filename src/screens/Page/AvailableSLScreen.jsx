@@ -8,24 +8,26 @@ import {
     TouchableOpacity,
     StyleSheet,
     Image,
+    StatusBar,
 } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 const serviceLines = [
-    
+
     { id: "1", title: "Software Engineer", company: "Tcs, kolkata", vacancy: 1 },
     { id: "2", title: "Software Engineer", company: "Tcs, kolkata", vacancy: 1 },
     { id: "3", title: "Software Engineer", company: "Tcs, kolkata", vacancy: 2 },
     { id: "4", title: "Software Engineer", company: "Tcs, Bangalore", vacancy: 3 },
     { id: "5", title: "Software Engineer", company: "Tcs, Bangalore", vacancy: 3 },
     { id: "6", title: "Software Engineer", company: "Tcs, Bangalore", vacancy: 3 },
-    
+
 ];
 
 const AvailableSLScreen = () => {
     const navigation = useNavigation();
 
     const renderItem = ({ item }) => (
-        <TouchableOpacity style={styles.card} onPress={()=>navigation.navigate('JobDetailsScreen')}>
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('JobDetailsScreen')}>
 
             <View style={{ flexDirection: 'row', }}>
                 <View style={styles.imagecard}>
@@ -56,34 +58,42 @@ const AvailableSLScreen = () => {
     );
 
     return (
-        <SafeAreaView style={styles.container}>
-            {/* Header */}
+        <SafeAreaProvider>
+            <SafeAreaView style={{ flex: 1, backgroundColor: '#E63665' }}>
+                <StatusBar backgroundColor="#E63665" barStyle="dark-content" />
+                <View style={styles.container}>
+                    {/* Header */}
 
 
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Image source={require('../../asset/back-icon.png')} style={styles.headerIcon}></Image>
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Available Service Lines</Text>
-                <TouchableOpacity onPress={() => navigation.replace('DashboardScreen')}>
-                    <Image source={require('../../asset/home-icon.png')} style={styles.headerIcon}></Image>
-                </TouchableOpacity>
+                    <View style={styles.header}>
+                        <TouchableOpacity onPress={() => navigation.goBack()}>
+                            <Image source={require('../../asset/back-icon.png')} style={styles.headerIcon}></Image>
+                        </TouchableOpacity>
+                        <Text style={styles.headerTitle}>Available Service Lines</Text>
+                        <TouchableOpacity onPress={() => navigation.replace('DashboardScreen')}>
+                            <Image source={require('../../asset/home-icon.png')} style={styles.headerIcon}></Image>
+                        </TouchableOpacity>
 
-            </View>
-            <View style={{ padding: 10, flex: 1 }}>
-                <FlatList
-                    data={serviceLines}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderItem}
-                />
-            </View>
-
-
+                    </View>
+                    <View style={{ padding: 10, flex: 1 }}>
+                        <FlatList
+                            data={serviceLines}
+                            keyExtractor={(item) => item.id}
+                            renderItem={renderItem}
+                        />
+                    </View>
 
 
-            {/* Buttons */}
 
-        </SafeAreaView>
+
+                    {/* Buttons */}
+
+                </View>
+            </SafeAreaView>
+        </SafeAreaProvider>
+
+
+
     );
 };
 
