@@ -11,14 +11,19 @@ import {
 } from "react-native";
 
 const serviceLines = [
-    { id: "1", title: "Software Engineer", company: "Tcs, kolkata", vacancy: 5 },
-    { id: "2", title: "Sound Engineer", company: "Tcs, kolkata", vacancy: 3 },
-    { id: "3", title: "Sound Engineer", company: "Tcs, kolkata", vacancy: 5 },
-    { id: "4", title: "Software Engineer", company: "Tcs, kolkata", vacancy: 1 },
+    
+    { id: "1", title: "Software Engineer", company: "Tcs, kolkata", vacancy: 1 },
+    { id: "2", title: "Software Engineer", company: "Tcs, kolkata", vacancy: 1 },
+    { id: "3", title: "Software Engineer", company: "Tcs, kolkata", vacancy: 2 },
+    { id: "4", title: "Software Engineer", company: "Tcs, Bangalore", vacancy: 3 },
+    { id: "5", title: "Software Engineer", company: "Tcs, Bangalore", vacancy: 3 },
+    { id: "6", title: "Software Engineer", company: "Tcs, Bangalore", vacancy: 3 },
+    
 ];
 
-const DashboardSL = () => {
-    const navigation=useNavigation();
+const AvailableSLScreen = () => {
+    const navigation = useNavigation();
+
     const renderItem = ({ item }) => (
         <TouchableOpacity style={styles.card} onPress={()=>navigation.navigate('JobDetailsScreen')}>
 
@@ -55,42 +60,45 @@ const DashboardSL = () => {
             {/* Header */}
 
 
-            {/* List */}
-            <Text style={styles.sectionTitle}>Available Service Lines</Text>
-            <FlatList
-                data={serviceLines}
-                keyExtractor={(item) => item.id}
-                renderItem={renderItem}
-            />
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <Image source={require('../../asset/back-icon.png')} style={styles.headerIcon}></Image>
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Available Service Lines</Text>
+                <TouchableOpacity onPress={() => navigation.replace('DashboardScreen')}>
+                    <Image source={require('../../asset/home-icon.png')} style={styles.headerIcon}></Image>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={{ alignItems: "center", marginVertical: 20,flexDirection:'row',justifyContent:'center' }} onPress={()=>navigation.navigate('AvailableSLScreen')}>
-                <Text style={styles.viewmoretext}>View More</Text>
-                <Image source={require('../../asset/viewmore.png')} style={{marginLeft:5,tintColor:'#E63665',height:16,width:16}}></Image>
-            </TouchableOpacity>
+            </View>
+            <View style={{ padding: 10, flex: 1 }}>
+                <FlatList
+                    data={serviceLines}
+                    keyExtractor={(item) => item.id}
+                    renderItem={renderItem}
+                />
+            </View>
+
+
+
 
             {/* Buttons */}
-            <TouchableOpacity style={styles.outlineBtn}>
-                 <Image source={require('../../asset/profile-complete.png')} style={{marginRight:5,tintColor:'#E63665',height:30,width:30}}></Image>
-                <Text style={styles.outlineBtnText}>Profile View Completion</Text>
-            </TouchableOpacity>
 
-            <TouchableOpacity style={styles.fillBtn}>
-                 <Image source={require('../../asset/correct.png')} style={{marginRight:5,tintColor:'#FFFFFF',height:30,width:30}}></Image>
-                <Text style={styles.fillBtnText}>Applied SL</Text>
-            </TouchableOpacity>
         </SafeAreaView>
     );
 };
 
-export default DashboardSL;
+export default AvailableSLScreen;
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#fff", padding: 16 },
+    container: { flex: 1, backgroundColor: "#fff" },
     header: {
-        backgroundColor: "#E91E63",
-        padding: 16,
-        alignItems: "center",
-        marginBottom: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingBottom: 10,
+        backgroundColor: '#E63665',
+        height: 60,
     },
     headerText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
     sectionTitle: { fontSize: 16, fontWeight: "600", marginVertical: 12, color: '#595757', textAlign: 'center' },
@@ -152,27 +160,7 @@ const styles = StyleSheet.create({
         color: '#978F8F',
         marginLeft: 10
     },
-    outlineBtn: {
-        borderWidth: 1,
-        borderColor: "#E91E63",
-        padding: 12,
-        borderRadius: 30,
-        alignItems: "center",
-        marginTop: 10,
-        flexDirection:'row',
-        justifyContent:'center'
-    },
-    outlineBtnText: { color: "#E91E63", fontWeight: "600" },
-    fillBtn: {
-        backgroundColor: "#E91E63",
-        padding: 12,
-        borderRadius: 30,
-        alignItems: "center",
-        marginTop: 16,
-        flexDirection:'row',
-        justifyContent:'center'
-    },
-    fillBtnText: { color: "#fff", fontWeight: "600" },
+
     jobicon: {
         height: 25,
         width: 25
@@ -183,6 +171,16 @@ const styles = StyleSheet.create({
         fontStyle: "normal",   // "Semi Bold" handled by weight, style stays normal
         fontSize: 16,        // 100% of font size = 15
         letterSpacing: 0,
-        color:'#665F5F'
-    }
+        color: '#665F5F'
+    },
+    headerIcon: {
+        width: 24,
+        height: 24,
+        tintColor: '#FFFFFF'
+    },
+    headerTitle: {
+        color: "#fff",
+        fontSize: 18,
+        fontWeight: "bold",
+    },
 });

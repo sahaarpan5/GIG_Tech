@@ -10,6 +10,10 @@ import AttendanceReport from '../Page/AttendanceReport';
 import DashboardScreen from '../Page/DashboardScreen';
 import AttendanceDashboard from '../Page/AttendanceDashboard';
 import AttendanceManage from '../Page/AttendanceManage';
+import AvailableSLScreen from '../Page/AvailableSLScreen';
+import JobDetailsScreen from '../Page/JobDetailsScreen';
+
+
 
 
 
@@ -29,6 +33,8 @@ const AppNavigator = () => {
         <Stack.Screen name="DashboardScreen" component={DashboardScreen} />
         <Stack.Screen name="AttendanceDashboard" component={AttendanceDashboard} />
          <Stack.Screen name="AttendanceManage" component={AttendanceManage} />
+         <Stack.Screen name="AvailableSLScreen" component={AvailableSLScreen} />
+         <Stack.Screen name="JobDetailsScreen" component={JobDetailsScreen} />
 
       </Stack.Navigator>
 
