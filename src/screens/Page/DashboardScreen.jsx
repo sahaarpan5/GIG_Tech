@@ -12,6 +12,8 @@ import {
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 // npm install react-native-vector-icons
+import DashboardSL from '../Page/DashboardSL';
+
 
 const DashboardScreen = () => {
     const navigation = useNavigation();
@@ -88,10 +90,13 @@ const DashboardScreen = () => {
                     </View>
 
                     {slActive === 0 ? (
-                        <View style={styles.noSLBox}>
-                            <Text style={styles.noSLText}>
-                                You are not assigned to any SL
-                            </Text>
+                        // <View style={styles.noSLBox}>
+                        //     <Text style={styles.noSLText}>
+                        //         You are not assigned to any SL
+                        //     </Text>
+                        // </View>
+                        <View style={{flex:1}}>
+                            <DashboardSL ></DashboardSL>
                         </View>
                     ) : (
                         <>
