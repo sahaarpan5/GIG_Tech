@@ -24,7 +24,7 @@ const DashboardSL = () => {
 
             <View style={{ flexDirection: 'row', }}>
                 <View style={styles.imagecard}>
-                    <Image source={require('../../asset/temporary.png')} style={styles.jobicon}></Image>
+                    <Image source={require('../../assets/temporary.png')} style={styles.jobicon}></Image>
                 </View>
                 <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -37,7 +37,7 @@ const DashboardSL = () => {
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
                         <Text style={styles.company}>{item.company}</Text>
-                        <Image source={require('../../asset/right.png')} style={styles.jobicon}></Image>
+                        <Image source={require('../../assets/right.png')} style={styles.jobicon}></Image>
                     </View>
                 </View>
 
@@ -65,17 +65,17 @@ const DashboardSL = () => {
 
             <TouchableOpacity style={{ alignItems: "center", marginVertical: 20,flexDirection:'row',justifyContent:'center' }} onPress={()=>navigation.navigate('AvailableSLScreen')}>
                 <Text style={styles.viewmoretext}>View More</Text>
-                <Image source={require('../../asset/viewmore.png')} style={{marginLeft:5,tintColor:'#E63665',height:16,width:16}}></Image>
+                <Image source={require('../../assets/viewmore.png')} style={{marginLeft:5,tintColor:'#E63665',height:16,width:16}}></Image>
             </TouchableOpacity>
 
             {/* Buttons */}
             <TouchableOpacity style={styles.outlineBtn}>
-                 <Image source={require('../../asset/profile-complete.png')} style={{marginRight:5,tintColor:'#E63665',height:30,width:30}}></Image>
+                 <Image source={require('../../assets/profile-complete.png')} style={{marginRight:5,tintColor:'#E63665',height:30,width:30}}></Image>
                 <Text style={styles.outlineBtnText}>Profile View Completion</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.fillBtn} onPress={() =>navigation.navigate('AppliedSLScreen')}>
-                 <Image source={require('../../asset/correct.png')} style={{marginRight:5,tintColor:'#FFFFFF',height:30,width:30}}></Image>
+                 <Image source={require('../../assets/correct.png')} style={{marginRight:5,tintColor:'#FFFFFF',height:30,width:30}}></Image>
                 <Text style={styles.fillBtnText}>Applied SL</Text>
             </TouchableOpacity>
         </SafeAreaView>

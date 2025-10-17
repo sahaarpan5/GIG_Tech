@@ -20,11 +20,11 @@ const JobDetailsScreen = () => {
                 <StatusBar backgroundColor="#E63665" barStyle="dark-content" />
             <View style={styles.toolBar}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Image source={require('../../asset/back-icon.png')} style={styles.headerIcon}></Image>
+                    <Image source={require('../../assets/back-icon.png')} style={styles.headerIcon}></Image>
                 </TouchableOpacity>
                 <Text style={styles.tooltext}>Job Details</Text>
                 <TouchableOpacity onPress={() => navigation.replace('DashboardScreen')}>
-                    <Image source={require('../../asset/home-icon.png')} style={styles.headerIcon}></Image>
+                    <Image source={require('../../assets/home-icon.png')} style={styles.headerIcon}></Image>
                 </TouchableOpacity>
 
             </View>
@@ -32,7 +32,7 @@ const JobDetailsScreen = () => {
                 {/* Job Header */}
                 <View style={styles.header}>
                     <View style={styles.iconBox}>
-                        <Image source={require('../../asset/temporary.png')} style={styles.jobicon}></Image>
+                        <Image source={require('../../assets/temporary.png')} style={styles.jobicon}></Image>
                     </View>
                     <Text style={styles.jobTitle}>Software Engineer</Text>
                 </View>

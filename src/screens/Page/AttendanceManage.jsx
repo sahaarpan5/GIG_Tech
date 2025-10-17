@@ -205,11 +205,11 @@ const AttendanceManage = () => {
             {loading && <Loader />}
             <View style={styles.toolheader}>
               <TouchableOpacity onPress={() => navigation.goBack()}>
-                <Image source={require('../../asset/back-icon.png')} style={styles.headerIcon}></Image>
+                <Image source={require('../../assets/back-icon.png')} style={styles.headerIcon}></Image>
               </TouchableOpacity>
               <Text style={styles.headerTitle}>Manage</Text>
               <TouchableOpacity onPress={() => navigation.replace('DashboardScreen')}>
-                <Image source={require('../../asset/home-icon.png')} style={styles.headerIcon}></Image>
+                <Image source={require('../../assets/home-icon.png')} style={styles.headerIcon}></Image>
               </TouchableOpacity>
 
             </View>
@@ -231,7 +231,7 @@ const AttendanceManage = () => {
               </Text>
               <View style={styles.locationRow}>
                 <Image
-                  source={require('../../asset/maps.png')} // Replace with your fingerprint icon
+                  source={require('../../assets/maps.png')} // Replace with your fingerprint icon
                   style={styles.marker}
                 />
                 <Text style={styles.locationText}>
@@ -242,7 +242,7 @@ const AttendanceManage = () => {
               {/* Fingerprint + Attendance Text */}
               <TouchableOpacity style={styles.fingerprintContainer} onPress={markAttendance}>
                 <Image
-                  source={require('../../asset/fingerprint-scan.png')} // Replace with your fingerprint icon
+                  source={require('../../assets/fingerprint-scan.png')} // Replace with your fingerprint icon
                   style={styles.fingerprint}
                 />
                 <Text style={styles.attendanceText}>Mark{'\n'}Check-In/Check-Out</Text>

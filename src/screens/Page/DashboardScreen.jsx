@@ -84,20 +84,20 @@ const DashboardScreen = () => {
                     <View style={styles.header}>
                         <Text style={styles.headerTitle}>Hi! {username}</Text>
                         <TouchableOpacity onPress={() => navigation.replace('LoginScreen')}>
-                            <Image source={require('../../asset/turn-off.png')} ></Image>
+                            <Image source={require('../../assets/turn-off.png')} ></Image>
                         </TouchableOpacity>
 
                     </View>
 
                     {slActive === 0 ? (
-                        // <View style={styles.noSLBox}>
-                        //     <Text style={styles.noSLText}>
-                        //         You are not assigned to any SL
-                        //     </Text>
-                        // </View>
-                        <View style={{flex:1}}>
-                            <DashboardSL ></DashboardSL>
+                        <View style={styles.noSLBox}>
+                            <Text style={styles.noSLText}>
+                                You are not assigned to any SL
+                            </Text>
                         </View>
+                        // <View style={{flex:1}}>
+                        //     <DashboardSL ></DashboardSL>
+                        // </View>
                     ) : (
                         <>
 
@@ -108,43 +108,43 @@ const DashboardScreen = () => {
 
                             <View style={styles.card}>
                                 <View style={styles.cardRow}>
-                                    <Image source={require('../../asset/slname-icon.png')} ></Image>
+                                    <Image source={require('../../assets/slname-icon.png')} ></Image>
                                     <Text style={styles.label}>SL Name</Text>
                                     <Text style={styles.value}>{slName}</Text>
                                 </View>
 
                                  <View style={styles.cardRow}>
-                                    <Image source={require('../../asset/office-location.png')} ></Image>
+                                    <Image source={require('../../assets/office-location.png')} ></Image>
                                     <Text style={styles.label}>SL Office</Text>
                                     <Text style={styles.value}>{slOffice}</Text>
                                 </View>
 
                                 <View style={styles.cardRow}>
-                                    <Image source={require('../../asset/location-icon.png')} ></Image>
+                                    <Image source={require('../../assets/location-icon.png')} ></Image>
                                     <Text style={styles.label}>SL Location</Text>
                                     <Text style={styles.value}>{slLocation}</Text>
                                 </View>
 
                                 <View style={styles.cardRow}>
-                                    <Image source={require('../../asset/manager.png')} ></Image>
+                                    <Image source={require('../../assets/manager.png')} ></Image>
                                     <Text style={styles.label}>Position</Text>
                                     <Text style={styles.value}>{slPosition}</Text>
                                 </View>
 
                                  <View style={styles.cardRow}>
-                                    <Image source={require('../../asset/suitcase.png')} ></Image>
+                                    <Image source={require('../../assets/suitcase.png')} ></Image>
                                     <Text style={styles.label}>Work Type</Text>
                                     <Text style={styles.value}>{slWorkType}</Text>
                                 </View>
 
                                 <View style={styles.cardRow}>
-                                    <Image source={require('../../asset/date-icon.png')} ></Image>
+                                    <Image source={require('../../assets/date-icon.png')} ></Image>
                                     <Text style={styles.label}>Start Date</Text>
                                     <Text style={styles.value}>{slWorkStrtDate}</Text>
                                 </View>
 
                                 <View style={styles.cardRow}>
-                                    <Image source={require('../../asset/date-icon.png')} ></Image>
+                                    <Image source={require('../../assets/date-icon.png')} ></Image>
                                     <Text style={styles.label}>End Date</Text>
                                     <Text style={styles.value}>{slWorkEndDate}</Text>
                                 </View>
@@ -152,7 +152,7 @@ const DashboardScreen = () => {
 
                             {/* Button */}
                             <TouchableOpacity style={styles.attendanceButton} onPress={() => navigation.navigate('AttendanceDashboard')}>
-                                <Image source={require('../../asset/attendance-icon.png')} ></Image>
+                                <Image source={require('../../assets/attendance-icon.png')} ></Image>
                                 <Text style={styles.attendanceText}>Check-In / Check-Out</Text>
                             </TouchableOpacity>
                         </>
@@ -236,6 +236,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent:'center',
         flexDirection:'row'
+        
     },
     attendanceText: {
         color: "#f50057",

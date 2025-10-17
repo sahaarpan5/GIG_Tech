@@ -37,7 +37,7 @@ const Welcome = () => {
     return (
         <View style={{ flex: 1 }}>
             <ImageBackground
-                source={require('../../asset/Welcome.png')} // your top background image
+                source={require('../../assets/Welcome.png')} // your top background image
                 style={styles.topImage}
                 resizeMode="cover"
             >

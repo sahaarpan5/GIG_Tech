@@ -5,7 +5,7 @@ export const Loader = () => {
     <View style={styles.loaderOverlay}>
       <View >
         <Image
-          source={require('../asset/loader.gif')}
+          source={require('../assets/loader.gif')}
           style={styles.loaderImage}
         />
       </View>

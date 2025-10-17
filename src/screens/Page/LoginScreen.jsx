@@ -106,7 +106,7 @@ const LoginScreen = () => {
 
             {/* Header with ImageBackground */}
             <ImageBackground
-                source={require('../../asset/login-bg.jpg')} // 🔹 your gradient background image
+                source={require('../../assets/login-bg.jpg')} // 🔹 your gradient background image
                 style={styles.header}
                 resizeMode="cover"
 
@@ -115,7 +115,7 @@ const LoginScreen = () => {
                 <View style={{ bottom: 100, justifyContent: 'center', alignItems: 'center' }}>
                     <Text style={styles.title}>Login</Text>
                     <Image
-                        source={require('../../asset/login-illustration.png')} // 🔹 your illustration
+                        source={require('../../assets/login-illustration.png')} // 🔹 your illustration
                         style={styles.illustration}
                         resizeMode="contain"
                     />
@@ -179,13 +179,18 @@ const styles = StyleSheet.create({
     illustration: { width: 200, height: 200 },
     form: { padding: 20, marginTop: 50, width: '100%' },
     input: {
-        backgroundColor: '#fddde6',
+        borderWidth: 1,
+        borderColor: "#f50057",
         borderRadius: 25,
-        paddingHorizontal: 20,
         paddingVertical: 12,
+        alignItems: "center",
+        justifyContent:'center',
+        flexDirection:'row',
+        width: 350,
+        paddingHorizontal: 20,
         marginBottom: 15,
-        fontSize: 16,
-        width: '340'
+       
+       
     },
     rememberRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
     rememberText: { marginLeft: 8, color: '#555' },
@@ -195,6 +200,7 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         alignItems: 'center',
         marginBottom: 20,
+        
     },
     loginText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
     signupText: { textAlign: 'center', color: '#444' },

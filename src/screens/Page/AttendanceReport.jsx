@@ -207,11 +207,11 @@ function calculateWorkingHours(punchIn, punchOut) {
                     {loading && <Loader />}
                     <View style={styles.header}>
                         <TouchableOpacity onPress={() => navigation.goBack()}>
-                            <Image source={require('../../asset/back-icon.png')} style={styles.headerIcon}></Image>
+                            <Image source={require('../../assets/back-icon.png')} style={styles.headerIcon}></Image>
                         </TouchableOpacity>
                         <Text style={styles.headerTitle}>Report</Text>
                         <TouchableOpacity onPress={() => navigation.replace('DashboardScreen')}>
-                            <Image source={require('../../asset/home-icon.png')} style={styles.headerIcon}></Image>
+                            <Image source={require('../../assets/home-icon.png')} style={styles.headerIcon}></Image>
                         </TouchableOpacity>
 
                     </View>

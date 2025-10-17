@@ -19,7 +19,7 @@ const RegistrationScreen = () => {
         <View style={styles.container}>
             {/* Header with ImageBackground */}
             <ImageBackground
-                source={require('../../asset/login-bg.jpg')} // 🔹 your gradient background image
+                source={require('../../assets/login-bg.jpg')} // 🔹 your gradient background image
                 style={styles.header}
                 resizeMode="cover"
 
@@ -31,7 +31,7 @@ const RegistrationScreen = () => {
                     <View style={{  justifyContent: 'center', alignItems: 'center' }}>
                         <Text style={styles.title}>User Registration</Text>
                         <Image
-                            source={require('../../asset/registration-illustration.png')} // 🔹 your illustration
+                            source={require('../../assets/registration-illustration.png')} // 🔹 your illustration
                             style={styles.illustration}
                             resizeMode="contain"
                         />
@@ -57,14 +57,14 @@ const RegistrationScreen = () => {
                                     <Text style={styles.inouttext}>
                                         Gender
                                     </Text>
-                                    <Image source={require('../../asset/dropDown.png')} style={{tintColor:'#999'}}/>
+                                    <Image source={require('../../assets/dropDown.png')} style={{tintColor:'#999'}}/>
                                 </TouchableOpacity>
 
                                   <TouchableOpacity style={[styles.input,{justifyContent:'space-between', flexDirection: 'row',alignItems:'center'}]}>
                                     <Text style={styles.inouttext}>
                                         Country
                                     </Text>
-                                    <Image source={require('../../asset/dropDown.png')} style={{tintColor:'#999'}} />
+                                    <Image source={require('../../assets/dropDown.png')} style={{tintColor:'#999'}} />
                                 </TouchableOpacity>
                                 <TextInput
                                     placeholder="Mobile Number"

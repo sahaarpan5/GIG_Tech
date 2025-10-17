@@ -31,7 +31,7 @@ const AppliedSLScreen = () => {
 
             <View style={{ flexDirection: 'row', }}>
                 <View style={styles.imagecard}>
-                    <Image source={require('../../asset/temporary.png')} style={styles.jobicon}></Image>
+                    <Image source={require('../../assets/temporary.png')} style={styles.jobicon}></Image>
                 </View>
                 <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -66,11 +66,11 @@ const AppliedSLScreen = () => {
 
                     <View style={styles.header}>
                         <TouchableOpacity onPress={() => navigation.goBack()}>
-                            <Image source={require('../../asset/back-icon.png')} style={styles.headerIcon}></Image>
+                            <Image source={require('../../assets/back-icon.png')} style={styles.headerIcon}></Image>
                         </TouchableOpacity>
                         <Text style={styles.headerTitle}>Applied SL</Text>
                         <TouchableOpacity onPress={() => navigation.replace('DashboardScreen')}>
-                            <Image source={require('../../asset/home-icon.png')} style={styles.headerIcon}></Image>
+                            <Image source={require('../../assets/home-icon.png')} style={styles.headerIcon}></Image>
                         </TouchableOpacity>
 
                     </View>
