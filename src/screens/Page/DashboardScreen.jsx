@@ -94,6 +94,11 @@ const DashboardScreen = () => {
                             <Text style={styles.noSLText}>
                                 You are not assigned to any SL
                             </Text>
+
+                            <TouchableOpacity style={styles.attendanceButton} onPress={() => navigation.navigate('AttendanceDashboard')}>
+                                <Image source={require('../../assets/attendance-icon.png')} ></Image>
+                                <Text style={styles.attendanceText}>Check-In / Check-Out</Text>
+                            </TouchableOpacity>
                         </View>
                         // <View style={{flex:1}}>
                         //     <DashboardSL ></DashboardSL>

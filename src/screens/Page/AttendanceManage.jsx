@@ -22,6 +22,11 @@ const AttendanceManage = () => {
   const [capturedImage, setCapturedImage] = useState(null);
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
+  const [infoModalVisible, setInfoModalVisible] = useState(false);
+  const [todayDate, setTodayDate] = useState('');
+  const [checkInTime, setCheckInTime] = useState('');
+  const [checkOutTime, setCheckOutTime] = useState('');
+  const [noRecord, setNoRecord] = useState(false);
 
   const requestCameraPermission = async () => {
     if (Platform.OS === 'android') {
@@ -190,6 +195,68 @@ const AttendanceManage = () => {
     getLocation();
   }, []);
 
+  useEffect(() => {
+    // Example logic to open popup automatically
+    // const today = new Date();
+    // const formattedDate = today.toLocaleDateString('en-GB'); // dd/mm/yyyy format
+    // setTodayDate(formattedDate);
+
+    // // Example: you can later fetch real check-in/check-out data via API
+    // setCheckInTime('09:15 AM');
+    // setCheckOutTime('06:05 PM');
+    // setInfoModalVisible(true);
+
+    fetchTodayAttendance();
+
+    // Automatically open popup
+
+  }, []);
+
+
+  const fetchTodayAttendance = async () => {
+    try {
+      setLoading(true);
+      const empCode = await AsyncStorage.getItem('UserCode');
+       const today = new Date();
+
+    // 👉 Format date like "11 Nov 2025"
+    const options = { day: '2-digit', month: 'short', year: 'numeric' };
+    const formattedDisplayDate = today.toLocaleDateString('en-GB', options).replace(',', '');
+    setTodayDate(formattedDisplayDate);
+
+    // 👉 Format for API (MM/DD/YYYY)
+    const formattedAPIDate = `${(today.getMonth() + 1)
+      .toString()
+      .padStart(2, '0')}/${today.getDate().toString().padStart(2, '0')}/${today.getFullYear()}`;
+
+      const response = await axios.post(API.GET_ATTENDANCE, {
+        EmpCode: empCode || "GC000006",
+        Date: formattedAPIDate, // API expects date format like 10/17/2025
+      });
+
+      const res = response.data;
+      console.log("Today's Attendance:", res);
+
+      if (res.Response_Code === "101" && res.Response_Data.length > 0) {
+        const firstRecord = res.Response_Data[0];
+        const lastRecord = res.Response_Data[res.Response_Data.length - 1];
+        setCheckInTime(firstRecord.PunchTimes || '-');
+        setCheckOutTime(lastRecord.PunchTimes || '-');
+        setNoRecord(false);
+      } else {
+        setNoRecord(true);
+      }
+
+      setInfoModalVisible(true);
+    } catch (error) {
+      console.error("Error fetching today's attendance:", error);
+      setNoRecord(true);
+      setInfoModalVisible(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
 
 
@@ -255,6 +322,46 @@ const AttendanceManage = () => {
 
 
           </View>
+
+          <Modal
+            visible={infoModalVisible}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setInfoModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 15 }}>
+                  Attendance Info
+                </Text>
+
+                {noRecord ? (
+                  <Text style={{ fontSize: 16, color: '#d33', marginTop: 10 }}>
+                    No attendance record found.
+                  </Text>
+                ) : (
+                  <>
+                    <Text style={{ fontSize: 16 }}>📅 Date: {todayDate}</Text>
+                    <Text style={{ fontSize: 16, marginTop: 8 }}>🕘 Check-In: {checkInTime}</Text>
+                    <Text style={{ fontSize: 16, marginTop: 8 }}>🕔 Check-Out: {checkOutTime}</Text>
+                  </>
+                )}
+
+                <TouchableOpacity
+                  onPress={() => setInfoModalVisible(false)}
+                  style={{
+                    marginTop: 25,
+                    backgroundColor: '#E63665',
+                    paddingVertical: 10,
+                    paddingHorizontal: 30,
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text style={{ color: '#fff', fontWeight: '600' }}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </View>
       </SafeAreaView>
 
@@ -450,6 +557,27 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     tintColor: '#FFFFFF'
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)', // semi-transparent black background
+    justifyContent: 'center',            // center vertically
+    alignItems: 'center',                // center horizontally
+  },
+
+  modalContainer: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    paddingVertical: 25,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 6,                        // for Android shadow
   },
 });
 

@@ -189,6 +189,7 @@ const styles = StyleSheet.create({
         width: 350,
         paddingHorizontal: 20,
         marginBottom: 15,
+        color:'#000'
        
        
     },
