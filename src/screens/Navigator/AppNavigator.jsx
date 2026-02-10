@@ -14,7 +14,9 @@ import AvailableSLScreen from '../Page/AvailableSLScreen';
 import JobDetailsScreen from '../Page/JobDetailsScreen';
 import AppliedSLScreen from '../Page/AppliedSLScreen';
 import AppliedJobDetails from '../Page/AppliedJobDetails';
-
+import NewWelcomeScreen from '../Page/NewWelcomeScreen';
+import NewLoginScreen from '../Page/NewLoginScreen';
+import NewDashboardScreen from '../Page/NewDashboardScreen';
 
 
 
@@ -26,7 +28,7 @@ const AppNavigator = () => {
   return (
     <SafeAreaProvider >
 
-      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Welcome">
+      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="NewWelcomeScreen">
         <Stack.Screen name="Welcome" component={Welcome} />
         <Stack.Screen name="LoginScreen" component={LoginScreen} />
         <Stack.Screen name="RegistrationScreen" component={RegistrationScreen} />
@@ -38,6 +40,9 @@ const AppNavigator = () => {
          <Stack.Screen name="JobDetailsScreen" component={JobDetailsScreen} />
           <Stack.Screen name="AppliedSLScreen" component={AppliedSLScreen} />
           <Stack.Screen name="AppliedJobDetails" component={AppliedJobDetails} />
+           <Stack.Screen name="NewWelcomeScreen" component={NewWelcomeScreen} />
+           <Stack.Screen name="NewLoginScreen" component={NewLoginScreen} />
+           <Stack.Screen name="NewDashboardScreen" component={NewDashboardScreen} />
 
       </Stack.Navigator>
 
