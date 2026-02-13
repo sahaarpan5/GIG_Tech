@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import {
     View,
@@ -7,9 +8,11 @@ import {
     TouchableOpacity,
     SafeAreaView,
     ImageBackground,
+    Image,
 } from 'react-native';
 
 const NewDashboardScreen = () => {
+    const navigation=useNavigation();
     return (
         <SafeAreaView style={styles.safe}>
             <ImageBackground
@@ -22,8 +25,9 @@ const NewDashboardScreen = () => {
                     {/* Header */}
                     <View style={styles.header}>
                         <Text style={styles.headerTitle}>Dashboard</Text>
-                        <TouchableOpacity style={styles.checkInBtn}>
+                        <TouchableOpacity style={styles.checkInBtn} onPress={()=>navigation.navigate('AttendanceMarkScreen')}>
                             <Text style={styles.checkInText}>Check in</Text>
+                            <Image source={require('../../assets/checkin-icon.png')} style={{ marginLeft: 6, height: 30, width: 30 }} />
                         </TouchableOpacity>
                     </View>
 
@@ -31,14 +35,39 @@ const NewDashboardScreen = () => {
 
                         {/* Profile Card */}
                         <View style={styles.card}>
-                            <Text style={styles.cardTitle}>Delivery Boy</Text>
+                            <View style={styles.sltitlerow}>
+                                <View style={{ flexDirection: 'row' }}>
+                                    <View style={styles.workerbg}>
+                                        <Image source={require('../../assets/worker.png')} style={{ height: 26, width: 26 }} />
+                                    </View>
 
-                            <View style={styles.rowBetween}>
-                                <Text style={styles.name}>Zomato Company</Text>
-                                <Text style={styles.date}>01-2026</Text>
+                                    <Text style={[styles.cardTitle, { marginLeft: 10, marginTop: 5 }]}>Delivery Boy</Text>
+                                </View>
+                                <Image source={require('../../assets/navigator.png')} style={{ height: 26, width: 26 }} />
+
                             </View>
 
-                            <Text style={styles.location}>Newtown</Text>
+
+
+                            <View style={styles.rowBetween}>
+                                <View style={{ flexDirection: 'row', alignContent: 'center', alignItems: 'center' }}>
+                                    <Image source={require('../../assets/briefcase.png')} style={{ height: 12, width: 14, tintColor: '#000000', marginRight: 5 }} />
+                                    <Text style={styles.name}>Zomato Company</Text>
+                                </View>
+                                <View style={{ flexDirection: 'row', alignContent: 'center', alignItems: 'center' }}>
+                                    <Image source={require('../../assets/gps.png')} style={{ height: 18, width: 14, tintColor: '#000000', marginRight: 5 }} />
+                                    <Text style={styles.name}>Newtown</Text>
+                                </View>
+
+                                <View style={{ flexDirection: 'row', alignContent: 'center', alignItems: 'center' }}>
+                                    <Image source={require('../../assets/calendar.png')} style={{ height: 18, width: 14, tintColor: '#000000', marginRight: 5 }} />
+                                    <Text style={styles.name}>01-2026</Text>
+                                </View>
+
+
+                            </View>
+
+
                             <Text style={styles.desc}>
                                 Lorem Ipsum is simply dummy text of the printing and typesetting industry.
                             </Text>
@@ -46,11 +75,11 @@ const NewDashboardScreen = () => {
 
                         {/* Payment Summary */}
                         <View style={styles.card}>
-                            <Text style={styles.cardTitle}>Payment Summary</Text>
+                            <Text style={styles.paymentcardTitle}>Payment Summary</Text>
                             <Text style={styles.subTitle}>From 15 Nov 2025 to 25 Jan 2026</Text>
 
                             <View style={styles.paymentBox}>
-                                <Text style={styles.paymentLabel}>Total Payment</Text>
+                                <Text style={styles.paymentcardTitle}>Total Payment</Text>
                                 <Text style={styles.paymentAmount}>₹ 5000</Text>
                             </View>
 
@@ -64,7 +93,7 @@ const NewDashboardScreen = () => {
 
                         {/* Work Status */}
                         <View style={styles.card}>
-                            <Text style={styles.cardTitle}>Work Status</Text>
+                            <Text style={styles.paymentcardTitle}>Work Status</Text>
 
                             <View style={styles.tableHeader}>
                                 <Text style={styles.tableHead}>Company</Text>
@@ -76,47 +105,77 @@ const NewDashboardScreen = () => {
                             <View style={styles.tableRow}>
                                 <Text style={styles.tableCell}>North Point Logistics</Text>
                                 <Text style={styles.tableCell}>Warehouse Helper</Text>
-                                <Text style={[styles.status, styles.pending]}>Pending</Text>
+                                <Text style={[styles.tableCell, styles.pending]}>Pending</Text>
                                 <Text style={styles.tableCell}>2025-05-21</Text>
                             </View>
 
                             <View style={styles.tableRow}>
                                 <Text style={styles.tableCell}>AquaFix Plumbing</Text>
                                 <Text style={styles.tableCell}>Plumber</Text>
-                                <Text style={[styles.status, styles.rejected]}>Rejected</Text>
+                                <Text style={[styles.tableCell, styles.rejected]}>Rejected</Text>
                                 <Text style={styles.tableCell}>2026-01-10</Text>
                             </View>
 
-                            <Text style={styles.viewMore}>View More</Text>
+                            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', alignContent: 'center', alignSelf: 'flex-end', justifyContent: 'center' }}>
+                                <Image source={require('../../assets/eye.png')} style={{ height: 12, width: 14, marginRight: 5, marginTop: 5 }} />
+                                <Text style={styles.viewMore}>View More</Text>
+                            </TouchableOpacity>
+
+
                         </View>
 
                         {/* Work History */}
                         <View style={styles.card}>
-                            <Text style={styles.cardTitle}>Work History</Text>
+                            <Text style={[styles.paymentcardTitle, { marginBottom: 10 }]}>Work History</Text>
 
                             <View style={styles.historyRow}>
-                                <View>
-                                    <Text style={styles.name}>Technician</Text>
-                                    <Text style={styles.location}>Bigbazar • Kolkata</Text>
+                                <View style={{ flex: 1 }}>
+                                    <View style={[styles.workerbg, { width: 50, height: 50 }]}>
+                                        <Image source={require('../../assets/worker.png')} style={{ height: 30, width: 30 }} />
+                                    </View>
+                                </View>
+                                <View style={{ flex: 2 }}>
+                                    <View >
+
+
+                                        <Text style={[styles.paymentcardTitle]}>Technician</Text>
+                                        <Text style={styles.location}>Bigbazar • Kolkata</Text>
+                                    </View>
+
                                 </View>
 
-                                <View style={{ alignItems: 'flex-end' }}>
-                                    <Text style={styles.completed}>Completed</Text>
-                                    <Text style={styles.time}>2 months ago</Text>
+                                <View style={{ flex: 2 }}>
+                                    <View >
+
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', alignContent: 'center', alignSelf: 'flex-end', justifyContent: 'center', marginBottom: 4 }}>
+                                            <Image source={require('../../assets/clock.png')} style={{ height: 16, width: 16, marginRight: 5 }} />
+                                            <Text style={styles.time}>2 months ago</Text>
+
+                                        </View>
+
+                                        <Text style={styles.completed}>Completed</Text>
+                                    </View>
+
                                 </View>
+
+
                             </View>
 
-                            <Text style={styles.viewMore}>View More</Text>
+                            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', alignContent: 'center', alignSelf: 'flex-end', justifyContent: 'center' }}>
+                                <Image source={require('../../assets/eye.png')} style={{ height: 12, width: 14, marginRight: 5, marginTop: 5 }} />
+                                <Text style={styles.viewMore}>View More</Text>
+                            </TouchableOpacity>
                         </View>
+                        <View style={{ paddingBottom: '30%' }}></View>
 
                     </ScrollView>
 
                     {/* Bottom Tab */}
-                    <View style={styles.bottomTab}>
+                    {/* <View style={styles.bottomTab}>
                         {['Home', 'Wallet', 'Notification', 'Gigs', 'Profile'].map(item => (
                             <Text key={item} style={styles.tabText}>{item}</Text>
                         ))}
-                    </View>
+                    </View> */}
 
                 </View>
             </ImageBackground>
@@ -130,12 +189,13 @@ export default NewDashboardScreen;
 const styles = StyleSheet.create({
     safe: {
         flex: 1,
-        backgroundColor: '#EAF7F9',
+
+
     },
     container: {
         flex: 1,
-        marginTop:50,
-        
+        marginTop: 50,
+
     },
 
     header: {
@@ -145,19 +205,27 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     headerTitle: {
+        fontFamily: 'InstrumentSans-SemiBold', // ensure font is linked correctly
         fontSize: 20,
-        fontWeight: '700',
+        lineHeight: 20,
+        letterSpacing: 0,
+        textAlign: 'center',
+        fontWeight: '600',
         color: '#000',
     },
     checkInBtn: {
-        backgroundColor: '#1AB7C3',
+
         paddingHorizontal: 14,
         paddingVertical: 6,
         borderRadius: 20,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+
     },
     checkInText: {
-        color: '#fff',
-        fontSize: 12,
+        color: '#000000',
+        fontSize: 14,
     },
 
     card: {
@@ -166,26 +234,48 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         borderRadius: 14,
         padding: 16,
-        elevation: 3,
+        elevation: 5,
     },
     cardTitle: {
+        fontFamily: 'InstrumentSans-SemiBold',
         fontSize: 16,
-        fontWeight: '700',
+        fontWeight: '600',
+        lineHeight: 21,
+        letterSpacing: 0,
+
         marginBottom: 8,
     },
+
+    paymentcardTitle: {
+        fontFamily: 'InstrumentSans-SemiBold',
+        fontSize: 15,
+        fontWeight: '600',
+        lineHeight: 21,
+        letterSpacing: 0,
+        color: '#000000'
+    },
     subTitle: {
-        fontSize: 12,
-        color: '#777',
+        fontFamily: 'InstrumentSans-Regular',
+        fontSize: 10,
+        fontWeight: '400',
+        lineHeight: 21,
+        letterSpacing: 0,
         marginBottom: 12,
+        color: '#9C8E8E'
     },
 
     rowBetween: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        marginTop: 5
     },
     name: {
-        fontSize: 14,
-        fontWeight: '600',
+        fontFamily: 'InstrumentSans-Regular',
+        fontSize: 12,
+        fontWeight: '400',
+        lineHeight: 21,
+        letterSpacing: 0,
+        color: '#605C5C'
     },
     date: {
         fontSize: 12,
@@ -197,8 +287,13 @@ const styles = StyleSheet.create({
         marginVertical: 4,
     },
     desc: {
-        fontSize: 12,
-        color: '#777',
+        fontFamily: 'InstrumentSans-Regular',
+        fontSize: 10,
+        fontWeight: '400',
+        lineHeight: 16,
+        letterSpacing: 0,
+        marginTop: 10,
+        color: '#887878'
     },
 
     paymentBox: {
@@ -211,9 +306,12 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     paymentAmount: {
+        fontFamily: 'InstrumentSans-Medium',
         fontSize: 16,
-        fontWeight: '700',
-        color: '#F5A623',
+        fontWeight: '500',
+        lineHeight: 21,
+        letterSpacing: 0,
+        color: '#FEA92F',
     },
 
     progressWrapper: {
@@ -238,6 +336,10 @@ const styles = StyleSheet.create({
     tableHeader: {
         flexDirection: 'row',
         marginBottom: 6,
+        marginTop: 10,
+        backgroundColor: '#C6F5FB8C',
+        paddingVertical: 10,
+        paddingHorizontal: 10
     },
     tableHead: {
         flex: 1,
@@ -247,10 +349,15 @@ const styles = StyleSheet.create({
     tableRow: {
         flexDirection: 'row',
         marginVertical: 4,
+        backgroundColor: '#C6F5FB8C',
+        paddingVertical: 10,
+        paddingHorizontal: 10
+
     },
     tableCell: {
         flex: 1,
         fontSize: 12,
+        fontWeight: '400',
     },
     status: {
         fontSize: 12,
@@ -266,22 +373,26 @@ const styles = StyleSheet.create({
     historyRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginVertical: 8,
+        marginVertical: 10,
     },
     completed: {
         color: '#2ECC71',
         fontWeight: '700',
+        alignSelf: 'flex-end'
     },
     time: {
         fontSize: 11,
         color: '#777',
+        alignSelf: 'flex-end',
+
     },
 
     viewMore: {
-        alignSelf: 'flex-end',
+
         fontSize: 12,
-        color: '#1AB7C3',
+        color: '#047282',
         marginTop: 6,
+        fontWeight: "500"
     },
 
     bottomTab: {
@@ -294,10 +405,30 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 12,
     },
-     topImage: {
-        height: '100%',
-        width: '100%',
+    topImage: {
+        flex: 1
 
     },
+    sltitlerow: {
+        flexDirection: 'row',
+        alignContent: 'center',
+        marginBottom: 10,
+        justifyContent: 'space-between'
+
+
+
+    },
+    workerbg: {
+        backgroundColor: '#fff',
+        borderRadius: 55,
+        justifyContent: 'center',
+        alignContent: 'center',
+        borderWidth: 1,
+        borderColor: '#00000040',
+        padding: 5,
+        elevation: 3,
+        alignItems:'center'
+
+    }
 });
 

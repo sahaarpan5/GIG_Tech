@@ -13,10 +13,11 @@ import AttendanceManage from '../Page/AttendanceManage';
 import AvailableSLScreen from '../Page/AvailableSLScreen';
 import JobDetailsScreen from '../Page/JobDetailsScreen';
 import AppliedSLScreen from '../Page/AppliedSLScreen';
-import AppliedJobDetails from '../Page/AppliedJobDetails';
 import NewWelcomeScreen from '../Page/NewWelcomeScreen';
 import NewLoginScreen from '../Page/NewLoginScreen';
-import NewDashboardScreen from '../Page/NewDashboardScreen';
+
+import MainTabNavigator from '../Navigator/MainTabNavigator';
+import AttendanceMarkScreen from '../Page/AttendanceMarkScreen';
 
 
 
@@ -26,26 +27,23 @@ const Stack = createNativeStackNavigator();
 const AppNavigator = () => {
 
   return (
-    <SafeAreaProvider >
-
-      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="NewWelcomeScreen">
-        <Stack.Screen name="Welcome" component={Welcome} />
+   <SafeAreaProvider>
+      <Stack.Navigator
+        screenOptions={{ headerShown: false }}
+        initialRouteName="NewWelcomeScreen"
+      >
+        {/* Auth Screens */}
+        <Stack.Screen name="NewWelcomeScreen" component={NewWelcomeScreen} />
+        <Stack.Screen name="NewLoginScreen" component={NewLoginScreen} />
         <Stack.Screen name="LoginScreen" component={LoginScreen} />
+        <Stack.Screen name="Welcome" component={Welcome} />
         <Stack.Screen name="RegistrationScreen" component={RegistrationScreen} />
-        <Stack.Screen name="AttendanceReport" component={AttendanceReport} />
-        <Stack.Screen name="DashboardScreen" component={DashboardScreen} />
-        <Stack.Screen name="AttendanceDashboard" component={AttendanceDashboard} />
-         <Stack.Screen name="AttendanceManage" component={AttendanceManage} />
-         <Stack.Screen name="AvailableSLScreen" component={AvailableSLScreen} />
-         <Stack.Screen name="JobDetailsScreen" component={JobDetailsScreen} />
-          <Stack.Screen name="AppliedSLScreen" component={AppliedSLScreen} />
-          <Stack.Screen name="AppliedJobDetails" component={AppliedJobDetails} />
-           <Stack.Screen name="NewWelcomeScreen" component={NewWelcomeScreen} />
-           <Stack.Screen name="NewLoginScreen" component={NewLoginScreen} />
-           <Stack.Screen name="NewDashboardScreen" component={NewDashboardScreen} />
+        <Stack.Screen name="AttendanceManage" component={AttendanceManage} />
+         <Stack.Screen name="AttendanceMarkScreen" component={AttendanceMarkScreen} />
 
+        {/* Main App (Bottom Tabs) */}
+        <Stack.Screen name="MainTabNavigator" component={MainTabNavigator} />
       </Stack.Navigator>
-
     </SafeAreaProvider>
 
 

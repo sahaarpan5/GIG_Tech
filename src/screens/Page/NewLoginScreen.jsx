@@ -96,7 +96,7 @@ const NewLoginScreen = () => {
                             <Text style={styles.forgotText}>Forgot PIN? Set New PIN</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.btn} onPress={()=>navigation.replace('NewDashboardScreen')}>
+                        <TouchableOpacity style={styles.btn} onPress={()=>navigation.replace('MainTabNavigator')}>
                             <Text style={styles.btnText}>Continue</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={{ justifyContent: 'flex-end', flexDirection: 'row', width: '100%', marginTop: 20 }} onPress={()=>navigation.replace('RegistrationScreen')}>
