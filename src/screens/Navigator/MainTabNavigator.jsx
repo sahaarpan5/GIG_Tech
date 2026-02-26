@@ -7,6 +7,7 @@ import AttendanceDashboard from '../Page/AttendanceDashboard';
 import AvailableSLScreen from '../Page/AvailableSLScreen';
 import AppliedSLScreen from '../Page/AppliedSLScreen';
 import RegistrationScreen from '../Page/RegistrationScreen';
+import WalletScreen from '../Page/WalletScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -93,10 +94,11 @@ const MainTabNavigator = () => {
             })}
         >
             <Tab.Screen name="Home" component={NewDashboardScreen} />
-            <Tab.Screen name="Wallet" component={NewDashboardScreen} />
+            <Tab.Screen name="Wallet" component={WalletScreen} />
             <Tab.Screen name="Notification" component={AvailableSLScreen} />
             <Tab.Screen name="Gigs" component={AvailableSLScreen} />
             <Tab.Screen name="Profile" component={RegistrationScreen} />
+            
         </Tab.Navigator>
     );
 };
