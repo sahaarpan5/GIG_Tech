@@ -38,50 +38,55 @@ const WalletScreen = () => {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
-            {/* Header */}
-            <View style={styles.header}>
-                <Text style={styles.backArrow}>←</Text>
-                <Text style={styles.headerTitle}>Wallet</Text>
+            <ImageBackground
+                source={require('../../assets/Welcome-bg.png')} // your top background image
+                style={styles.topImage}
+                resizeMode="cover"
+            >
+                <View style={styles.main_container}>
+                    <View style={styles.header}>
 
-                <View style={styles.profileWrapper}>
-                    <Image
-                        source={{ uri: 'https://i.pravatar.cc/100' }}
-                        style={styles.profile}
-                    />
-                </View>
-            </View>
+                        <Text style={styles.headerTitle}>Wallet</Text>
 
-            {/* Total Earn Card */}
-            <ImageBackground source={require('../../assets/wallet-bg.png')} style={styles.earnCard_bg}>
-                <View style={styles.earnCard}>
-                    <View>
-                        <Text style={styles.earnLabel}>Total Earn</Text>
-                        <Text style={styles.earnAmount}>₹ 2,350</Text>
 
-                        <TouchableOpacity style={styles.viewButton}>
-                            <Text style={styles.viewText}>View</Text>
-                        </TouchableOpacity>
                     </View>
 
+                    {/* Total Earn Card */}
+                    <ImageBackground source={require('../../assets/wallet-bg.png')} style={styles.earnCard_bg}>
+                        <View style={styles.earnCard}>
+                            <View>
+                                <Text style={styles.earnLabel}>Total Earn</Text>
+                                <Text style={styles.earnAmount}>₹ 2,350</Text>
 
+                                <TouchableOpacity style={styles.viewButton}>
+                                    <Text style={styles.viewText}>View</Text>
+                                </TouchableOpacity>
+                            </View>
+
+
+                        </View>
+                    </ImageBackground>
+
+
+                    {/* Transaction Card */}
+                    <View style={styles.transactionCard}>
+                        <View style={styles.transactionHeader}>
+                            <Text style={styles.transactionHeading}>Transaction History</Text>
+                            <Text style={styles.arrow}>→</Text>
+                        </View>
+
+                        <FlatList
+                            data={transactions}
+                            keyExtractor={(item) => item.id}
+                            renderItem={renderItem}
+                            showsVerticalScrollIndicator={false}
+                        />
+                    </View>
                 </View>
             </ImageBackground>
 
 
-            {/* Transaction Card */}
-            <View style={styles.transactionCard}>
-                <View style={styles.transactionHeader}>
-                    <Text style={styles.transactionHeading}>Transaction History</Text>
-                    <Text style={styles.arrow}>→</Text>
-                </View>
 
-                <FlatList
-                    data={transactions}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderItem}
-                    showsVerticalScrollIndicator={false}
-                />
-            </View>
         </SafeAreaView>
     );
 };
@@ -91,14 +96,14 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#EAF6F9',
-        paddingHorizontal: 20,
+       
     },
 
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginVertical: 15,
+        
     },
 
     backArrow: {
@@ -106,8 +111,15 @@ const styles = StyleSheet.create({
     },
 
     headerTitle: {
-        fontSize: 18,
-        fontWeight: '600',
+        fontFamily: 'InstrumentSans-Medium',
+        fontSize: 26,
+        fontWeight: '500',
+        lineHeight: 21,
+        letterSpacing: 0,
+        textAlign: 'center',
+        color: '#000000',
+        marginTop: 50,
+        marginBottom:20
     },
 
     profileWrapper: {
@@ -241,7 +253,7 @@ const styles = StyleSheet.create({
     transactionTitle: {
         flex: 1,
         fontFamily: 'InstrumentSans-Regular',
-        fontSize: 12,
+        fontSize: 16,
         fontWeight: '400',
         lineHeight: 21,
         letterSpacing: 0,
@@ -250,10 +262,19 @@ const styles = StyleSheet.create({
 
     amount: {
         fontFamily: 'InstrumentSans-SemiBold',
-        fontSize: 11,
+        fontSize: 16,
         fontWeight: '600',
         lineHeight: 21,
         letterSpacing: 0,
-        color:'#000000',
+        color: '#000000',
+    },
+
+    main_container: {
+        flex: 1,
+        marginHorizontal:20
+    },
+
+    topImage: {
+        flex: 1
     },
 });

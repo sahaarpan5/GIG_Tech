@@ -11,7 +11,7 @@ import DashboardScreen from '../Page/DashboardScreen';
 import AttendanceDashboard from '../Page/AttendanceDashboard';
 import AttendanceManage from '../Page/AttendanceManage';
 import AvailableSLScreen from '../Page/AvailableSLScreen';
-import JobDetailsScreen from '../Page/JobDetailsScreen';
+
 import AppliedSLScreen from '../Page/AppliedSLScreen';
 import NewWelcomeScreen from '../Page/NewWelcomeScreen';
 import NewLoginScreen from '../Page/NewLoginScreen';
@@ -19,7 +19,14 @@ import NewLoginScreen from '../Page/NewLoginScreen';
 import MainTabNavigator from '../Navigator/MainTabNavigator';
 import AttendanceMarkScreen from '../Page/AttendanceMarkScreen';
 
+import Jobdetails from '../Page/Jobdetails';
+import Registration from '../Page/Registration';
+import NewDashboardScreen from '../Page/NewDashboardScreen';
+import ProfileScreen from '../Page/ProfileScreen';
 
+import ActivityReportScreen from '../Page/ActivityReportScreen';
+
+import MyEarningsScreen from '../Page/MyEarningsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -40,6 +47,12 @@ const AppNavigator = () => {
         <Stack.Screen name="RegistrationScreen" component={RegistrationScreen} />
         <Stack.Screen name="AttendanceManage" component={AttendanceManage} />
          <Stack.Screen name="AttendanceMarkScreen" component={AttendanceMarkScreen} />
+         <Stack.Screen name="Jobdetails" component={Jobdetails} />
+         <Stack.Screen name="Registration" component={Registration} />
+          <Stack.Screen name="NewDashboardScreen" component={NewDashboardScreen} />
+          <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+          <Stack.Screen name="ActivityReportScreen" component={ActivityReportScreen} />
+           <Stack.Screen name="MyEarningsScreen" component={MyEarningsScreen} />
 
         {/* Main App (Bottom Tabs) */}
         <Stack.Screen name="MainTabNavigator" component={MainTabNavigator} />
