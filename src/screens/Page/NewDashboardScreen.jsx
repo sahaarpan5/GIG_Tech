@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     View,
     Text,
@@ -14,7 +14,7 @@ import {
     Dimensions,
     Image,
 } from 'react-native';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -47,6 +47,78 @@ I understand that:
 By signing below, I acknowledge that I have read, understood, and agree to the above terms and conditions.`;
 
 const RATE_PER_UNIT = 100;
+
+const LANGUAGES = [
+    { key: 'English', label: 'English', native: 'English', code: 'EN' },
+    { key: 'Hindi', label: 'Hindi', native: 'हिन्दी', code: 'हि' },
+    { key: 'Bengali', label: 'Bengali', native: 'বাংলা', code: 'বাং' },
+];
+
+
+
+const TRANSLATIONS = {
+    English: {
+        greeting: 'Good morning, Rahul 👋',
+        subtitle: "Here's your today's work",
+        chooseLanguage: 'Choose Language',
+
+        activeSL: 'ACTIVE SL',
+        slLocation: 'SL Location',
+        assignedDate: 'Assigned Date',
+        startDate: 'Start Date',
+        endDate: 'End Date',
+
+        startActivity: 'Start Activity',
+        activityReport: 'Activity Report',
+        myEarnings: 'My Earnings',
+        profileStatus: 'Profile Status',
+        profileIncomplete: 'Profile incomplete',
+        profileComplete: 'Profile complete',
+        viewProfile: 'View Profile',
+
+        consentTitle: 'Consent & Agreement',
+        yourSignature: 'Your Signature',
+        signHere: 'Sign here with your finger',
+        clearSignature: 'Clear signature',
+        saveContinue: 'Save & Continue',
+
+        activityDetails: 'Enter your activity details',
+        selfieVerification: 'Selfie Verification',
+        takeSelfie: 'Take a selfie',
+        selfieInstruction: 'Make sure your face is clearly visible',
+        openCamera: 'Open Camera',
+
+        currentLocation: 'Current Location',
+        youAreHere: 'You are here',
+        gpsAccuracy: 'GPS accuracy ± 5m',
+
+        productName: 'Product Name',
+        value: 'Value',
+        enterQuantity: 'Enter quantity',
+        rate: 'Rate',
+        total: 'Total',
+        units: 'unit(s)',
+        save: 'Save',
+    },
+    Bengali: {
+        greeting: 'সুপ্রভাত, Rahul 👋', subtitle: 'আজকের কাজের বিবরণ', chooseLanguage: 'ভাষা নির্বাচন করুন',
+        activeSL: 'সক্রিয় সার্ভিস লোকেশন', slLocation: 'সার্ভিস লোকেশন', assignedDate: 'নির্ধারিত তারিখ', startDate: 'শুরুর তারিখ', endDate: 'শেষ তারিখ',
+        startActivity: 'কাজ শুরু করুন', activityReport: 'কাজের রিপোর্ট', myEarnings: 'আমার উপার্জন', profileStatus: 'প্রোফাইলের অবস্থা',
+        profileIncomplete: 'প্রোফাইল অসম্পূর্ণ', profileComplete: 'প্রোফাইল সম্পূর্ণ', viewProfile: 'প্রোফাইল দেখুন',
+        consentTitle: 'সম্মতি ও চুক্তি', yourSignature: 'আপনার স্বাক্ষর', signHere: 'এখানে আঙুল দিয়ে স্বাক্ষর করুন', clearSignature: 'স্বাক্ষর মুছে ফেলুন', saveContinue: 'সংরক্ষণ করুন ও এগিয়ে যান',
+        activityDetails: 'কাজের বিবরণ লিখুন', selfieVerification: 'সেলফি যাচাইকরণ', takeSelfie: 'সেলফি তুলুন', selfieInstruction: 'আপনার মুখ স্পষ্টভাবে দেখা যাচ্ছে কিনা নিশ্চিত করুন', openCamera: 'ক্যামেরা খুলুন',
+        currentLocation: 'বর্তমান অবস্থান', youAreHere: 'আপনি এখানে আছেন', gpsAccuracy: 'GPS নির্ভুলতা ± ৫ মিটার', productName: 'পণ্যের নাম', value: 'পরিমাণ', enterQuantity: 'পরিমাণ লিখুন', rate: 'দর', total: 'মোট', units: 'একক', save: 'সংরক্ষণ করুন',
+    },
+    Hindi: {
+        greeting: 'सुप्रभात, Rahul 👋', subtitle: 'आज के काम का विवरण', chooseLanguage: 'भाषा चुनें',
+        activeSL: 'सक्रिय सर्विस लोकेशन', slLocation: 'सर्विस लोकेशन', assignedDate: 'निर्धारित तिथि', startDate: 'शुरू होने की तिथि', endDate: 'समाप्ति तिथि',
+        startActivity: 'काम शुरू करें', activityReport: 'कार्य रिपोर्ट', myEarnings: 'मेरी कमाई', profileStatus: 'प्रोफ़ाइल की स्थिति',
+        profileIncomplete: 'प्रोफ़ाइल अधूरी है', profileComplete: 'प्रोफ़ाइल पूरी है', viewProfile: 'प्रोफ़ाइल देखें',
+        consentTitle: 'सहमति और अनुबंध', yourSignature: 'आपके हस्ताक्षर', signHere: 'यहाँ उँगली से हस्ताक्षर करें', clearSignature: 'हस्ताक्षर मिटाएँ', saveContinue: 'सहेजें और आगे बढ़ें',
+        activityDetails: 'कार्य का विवरण दर्ज करें', selfieVerification: 'सेल्फी सत्यापन', takeSelfie: 'सेल्फी लें', selfieInstruction: 'सुनिश्चित करें कि आपका चेहरा स्पष्ट दिखाई दे', openCamera: 'कैमरा खोलें',
+        currentLocation: 'वर्तमान स्थान', youAreHere: 'आप यहाँ हैं', gpsAccuracy: 'GPS सटीकता ± 5 मीटर', productName: 'उत्पाद का नाम', value: 'मात्रा', enterQuantity: 'मात्रा दर्ज करें', rate: 'दर', total: 'कुल', units: 'इकाई', save: 'सहेजें',
+    },
+};
 
 /* =====================================================
    SIGNATURE PAD
@@ -130,7 +202,6 @@ const SignaturePad = ({ onSignedChange, signatureRef }) => {
             </View>
 
             <TouchableOpacity onPress={clear} style={styles.clearBtn} activeOpacity={0.7}>
-
                 <Image
                     source={require('../../assets/refresh-outline.png')}
                     style={{ height: 14, width: 14, tintColor: '#E63E6D' }}
@@ -146,9 +217,15 @@ const SignaturePad = ({ onSignedChange, signatureRef }) => {
    MAIN DASHBOARD
    ===================================================== */
 const NewDashboardScreen = () => {
-  const navigation = useNavigation();
+    const navigation = useNavigation();
     const [consentVisible, setConsentVisible] = useState(false);
     const [productVisible, setProductVisible] = useState(false);
+    const [languageModalVisible, setLanguageModalVisible] = useState(false);
+    const LANGUAGE_STORAGE_KEY = 'selectedLanguage';
+
+    const [selectedLanguage, setSelectedLanguage] = useState('English');
+
+    const t = (key) => TRANSLATIONS[selectedLanguage]?.[key] ?? TRANSLATIONS.English[key] ?? key;
 
     const [isSigned, setIsSigned] = useState(false);
     const signatureRef = useRef(null);
@@ -175,6 +252,28 @@ const NewDashboardScreen = () => {
         console.log('Saved:', { productName, quantity, rate });
     };
 
+
+    useEffect(() => {
+        const loadSavedLanguage = async () => {
+            try {
+                const savedLanguage = await AsyncStorage.getItem(
+                    LANGUAGE_STORAGE_KEY
+                );
+
+                if (
+                    savedLanguage &&
+                    TRANSLATIONS[savedLanguage]
+                ) {
+                    setSelectedLanguage(savedLanguage);
+                }
+            } catch (error) {
+                console.log('Error loading language:', error);
+            }
+        };
+
+        loadSavedLanguage();
+    }, []);
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
@@ -191,12 +290,23 @@ const NewDashboardScreen = () => {
 
                     <View style={styles.headerRow}>
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.greeting}>Good morning, Rahul 👋</Text>
-                            <Text style={styles.subGreeting}>Here's your today's work</Text>
+                            <Text style={styles.greeting}>{t('greeting')}</Text>
+                            <Text style={styles.subGreeting}>{t('subtitle')}</Text>
                         </View>
 
-                        <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8}>
+                        {/* Language button */}
+                        <TouchableOpacity
+                            style={styles.langBtn}
+                            activeOpacity={0.8}
+                            onPress={() => setLanguageModalVisible(true)}
+                        >
+                            <Text style={styles.langBtnText}>
+                                {selectedLanguage === 'English' ? 'EN' : selectedLanguage === 'Hindi' ? 'हि' : 'বাং'}
+                            </Text>
+                        </TouchableOpacity>
 
+                        {/* Notification bell */}
+                        <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8}>
                             <Image
                                 source={require('../../assets/notifications-outline.png')}
                                 style={{ height: 22, width: 22, tintColor: '#FFFFFF' }}
@@ -211,14 +321,13 @@ const NewDashboardScreen = () => {
                 <View style={styles.slCard}>
                     <View style={styles.statusPill}>
                         <View style={styles.statusDot} />
-                        <Text style={styles.statusText}>ACTIVE ASSIGNMENT</Text>
+                        <Text style={styles.statusText}>{t('activeSL')}</Text>
                     </View>
 
                     <View style={styles.slHeaderRow}>
                         <View style={styles.slIconBox}>
                             <View style={styles.slIconGradientTop} />
                             <View style={styles.slIconGradientBottom} />
-
                             <Image
                                 source={require('../../assets/work.png')}
                                 style={{ height: 22, width: 22, tintColor: '#FFFFFF' }}
@@ -233,10 +342,10 @@ const NewDashboardScreen = () => {
 
                     <View style={styles.divider} />
 
-                    <DetailRow  icon={require('../../assets/location.png')} iconBg="#E8F4FF" iconColor="#2C7BE5" label="SL Location" value={SL_DATA.location} />
-                    <DetailRow   icon={require('../../assets/calendar.png')}iconBg="#FFF4E5" iconColor="#F5A623" label="Assigned Date" value={SL_DATA.assignedDate} />
-                    <DetailRow  icon={require('../../assets/play-button.png')}iconBg="#E8FBF2" iconColor="#22A06B" label="Start Date" value={SL_DATA.startDate} />
-                    <DetailRow icon={require('../../assets/red-flag.png')} iconBg="#FFEBF0" iconColor="#E63E6D" label="End Date" value={SL_DATA.endDate} last />
+                    <DetailRow icon={require('../../assets/location.png')} iconBg="#E8F4FF" iconColor="#2C7BE5" label={t('slLocation')} value={SL_DATA.location} />
+                    <DetailRow icon={require('../../assets/calendar.png')} iconBg="#FFF4E5" iconColor="#F5A623" label={t('assignedDate')} value={SL_DATA.assignedDate} />
+                    <DetailRow icon={require('../../assets/play-button.png')} iconBg="#E8FBF2" iconColor="#22A06B" label={t('startDate')} value={SL_DATA.startDate} />
+                    <DetailRow icon={require('../../assets/red-flag.png')} iconBg="#FFEBF0" iconColor="#E63E6D" label={t('endDate')} value={SL_DATA.endDate} last />
 
                     <TouchableOpacity
                         style={styles.primaryButton}
@@ -244,14 +353,12 @@ const NewDashboardScreen = () => {
                         onPress={handleStartActivity}
                     >
                         <View style={styles.primaryButtonGlow} />
-
                         <Image
                             source={require('../../assets/play.png')}
                             style={{ height: 16, width: 16, tintColor: '#FFFFFF' }}
                             resizeMode="contain"
                         />
-                        <Text style={styles.primaryButtonText}>Start Activity</Text>
-
+                        <Text style={styles.primaryButtonText}> {t('startActivity')}</Text>
                         <Image
                             source={require('../../assets/arrow-forward.png')}
                             style={{ height: 18, width: 18, tintColor: '#FFFFFF', marginLeft: 6 }}
@@ -266,23 +373,21 @@ const NewDashboardScreen = () => {
                     <TouchableOpacity
                         style={[styles.quickCard, styles.quickCardBlue]}
                         activeOpacity={0.85}
-                        onPress={()=>navigation.navigate('ActivityReportScreen')}
+                        onPress={() => navigation.navigate('ActivityReportScreen')}
                     >
                         <View style={[styles.quickIconBox, styles.quickIconBlue]}>
-
                             <Image
                                 source={require('../../assets/bar-chart.png')}
-                                style={{ height: 20, width: 20, tintColor: '#FFFFFF', }}
+                                style={{ height: 20, width: 20, tintColor: '#FFFFFF' }}
                                 resizeMode="contain"
                             />
                         </View>
-                        <Text style={styles.quickTitle}>Activity Report</Text>
-                        
-                        <View style={[styles.quickArrow, styles.quickArrowBlue]}>
+                        <Text style={styles.quickTitle}>{t('activityReport')}</Text>
 
+                        <View style={[styles.quickArrow, styles.quickArrowBlue]}>
                             <Image
                                 source={require('../../assets/arrow-forward.png')}
-                                style={{ height: 14, width: 14, tintColor: '#2C7BE5', }}
+                                style={{ height: 14, width: 14, tintColor: '#2C7BE5' }}
                                 resizeMode="contain"
                             />
                         </View>
@@ -292,23 +397,21 @@ const NewDashboardScreen = () => {
                     <TouchableOpacity
                         style={[styles.quickCard, styles.quickCardGreen]}
                         activeOpacity={0.85}
-                         onPress={()=>navigation.navigate('MyEarningsScreen')}
+                        onPress={() => navigation.navigate('MyEarningsScreen')}
                     >
                         <View style={[styles.quickIconBox, styles.quickIconGreen]}>
-
                             <Image
                                 source={require('../../assets/wallet.png')}
-                                style={{ height: 20, width: 20, tintColor: '#FFFFFF', }}
+                                style={{ height: 20, width: 20, tintColor: '#FFFFFF' }}
                                 resizeMode="contain"
                             />
                         </View>
-                        <Text style={styles.quickTitle}>My Earnings</Text>
-                        
-                        <View style={[styles.quickArrow, styles.quickArrowGreen]}>
+                        <Text style={styles.quickTitle}>{t('myEarnings')}</Text>
 
+                        <View style={[styles.quickArrow, styles.quickArrowGreen]}>
                             <Image
                                 source={require('../../assets/arrow-forward.png')}
-                                style={{ height: 14, width: 14, tintColor: '#22A06B', }}
+                                style={{ height: 14, width: 14, tintColor: '#22A06B' }}
                                 resizeMode="contain"
                             />
                         </View>
@@ -319,21 +422,19 @@ const NewDashboardScreen = () => {
                 <View style={styles.profileCard}>
                     <View style={styles.profileHeaderRow}>
                         <View style={styles.profileIconBox}>
-
                             <Image
                                 source={require('../../assets/person-circle.png')}
-                                style={{ height: 24, width: 24, tintColor: '#7B5CFF', }}
+                                style={{ height: 24, width: 24, tintColor: '#7B5CFF' }}
                                 resizeMode="contain"
                             />
                         </View>
-                        <Text style={styles.profileTitle}>Profile Status</Text>
+                        <Text style={styles.profileTitle}>{t('profileStatus')}</Text>
                         <View style={styles.percentBadge}>
                             <Text style={styles.percentBadgeText}>{PROFILE.percent}%</Text>
                         </View>
                     </View>
 
                     <View style={styles.profileStatusRow}>
-
                         <Image
                             source={
                                 PROFILE.percent < 100
@@ -348,7 +449,9 @@ const NewDashboardScreen = () => {
                             }}
                         />
                         <Text style={styles.profileStatusText}>
-                            {PROFILE.percent < 100 ? 'Profile incomplete' : 'Profile complete'}
+                            {PROFILE.percent < 100
+                                ? t('profileIncomplete')
+                                : t('profileComplete')}
                         </Text>
                     </View>
 
@@ -358,11 +461,12 @@ const NewDashboardScreen = () => {
                         </View>
                     </View>
 
-                    
-
-                    <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.85} onPress={()=>navigation.navigate('ProfileScreen')}>
-                        <Text style={styles.secondaryButtonText}>View Profile</Text>
-
+                    <TouchableOpacity
+                        style={styles.secondaryButton}
+                        activeOpacity={0.85}
+                        onPress={() => navigation.navigate('ProfileScreen')}
+                    >
+                        <Text style={styles.secondaryButtonText}>{t('viewProfile')}</Text>
                         <Image
                             source={require('../../assets/arrow-forward.png')}
                             style={{ height: 18, width: 18, tintColor: '#047282', marginLeft: 6 }}
@@ -375,18 +479,17 @@ const NewDashboardScreen = () => {
             </ScrollView>
 
             {/* =====================================================
-          MODAL 1 — CONSENT + SIGNATURE
-          ===================================================== */}
+                MODAL 1 — CONSENT + SIGNATURE
+                ===================================================== */}
             <Modal visible={consentVisible} transparent animationType="slide" onRequestClose={() => setConsentVisible(false)}>
                 <View style={styles.modalBackdrop}>
                     <View style={styles.modalSheet}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Consent & Agreement</Text>
+                            <Text style={styles.modalTitle}>{t('consentTitle')}</Text>
                             <TouchableOpacity onPress={() => setConsentVisible(false)} style={styles.modalCloseBtn} activeOpacity={0.7}>
-
                                 <Image
                                     source={require('../../assets/close.png')}
-                                    style={{ height: 20, width: 20, tintColor: '#6B7A7C', }}
+                                    style={{ height: 20, width: 20, tintColor: '#6B7A7C' }}
                                     resizeMode="contain"
                                 />
                             </TouchableOpacity>
@@ -396,7 +499,7 @@ const NewDashboardScreen = () => {
                             <Text style={styles.consentText}>{CONSENT_TEXT}</Text>
                         </ScrollView>
 
-                        <Text style={styles.signatureLabel}>Your Signature</Text>
+                        <Text style={styles.signatureLabel}>{t('yourSignature')}</Text>
                         <SignaturePad onSignedChange={setIsSigned} signatureRef={signatureRef} />
 
                         <TouchableOpacity
@@ -405,8 +508,7 @@ const NewDashboardScreen = () => {
                             disabled={!isSigned}
                             activeOpacity={0.85}
                         >
-                            <Text style={styles.modalPrimaryBtnText}>Save & Continue</Text>
-
+                            <Text style={styles.modalPrimaryBtnText}>{t('saveContinue')}</Text>
                             <Image
                                 source={require('../../assets/arrow-forward.png')}
                                 style={{ height: 18, width: 18, tintColor: '#FFFFFF', marginLeft: 6 }}
@@ -418,15 +520,14 @@ const NewDashboardScreen = () => {
             </Modal>
 
             {/* =====================================================
-          MODAL 2 — ENTER YOUR ACTIVITY DETAILS
-          ===================================================== */}
+                MODAL 2 — ENTER YOUR ACTIVITY DETAILS
+                ===================================================== */}
             <Modal visible={productVisible} transparent animationType="slide" onRequestClose={() => setProductVisible(false)}>
                 <View style={styles.modalBackdrop}>
                     <View style={styles.modalSheet}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Enter your activity details</Text>
+                            <Text style={styles.modalTitle}>{t('activityDetails')}</Text>
                             <TouchableOpacity onPress={() => setProductVisible(false)} style={styles.modalCloseBtn} activeOpacity={0.7}>
-
                                 <Image
                                     source={require('../../assets/close.png')}
                                     style={{ height: 20, width: 20, tintColor: '#6B7A7C' }}
@@ -437,36 +538,33 @@ const NewDashboardScreen = () => {
 
                         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
                             {/* Selfie */}
-                            <Text style={styles.fieldLabel}>Selfie Verification</Text>
+                            <Text style={styles.fieldLabel}>{t('selfieVerification')}</Text>
                             <View style={styles.selfieCard}>
                                 <View style={styles.selfieCircle}>
-
                                     <Image
                                         source={require('../../assets/cameraa.png')}
                                         style={{ height: 36, width: 36, tintColor: '#047282' }}
                                         resizeMode="contain"
                                     />
                                 </View>
-                                <Text style={styles.selfieTitle}>Take a selfie</Text>
+                                <Text style={styles.selfieTitle}>{t('takeSelfie')}</Text>
                                 <Text style={styles.selfieSubtitle}>
-                                    Make sure your face is clearly visible
+                                    {t('selfieInstruction')}
                                 </Text>
                                 <TouchableOpacity style={styles.selfieBtn} activeOpacity={0.85}>
-
                                     <Image
                                         source={require('../../assets/camera-outline.png')}
                                         style={{ height: 18, width: 18, tintColor: '#FFFFFF' }}
                                         resizeMode="contain"
                                     />
-                                    <Text style={styles.selfieBtnText}>Open Camera</Text>
+                                    <Text style={styles.selfieBtnText}>{t('openCamera')}</Text>
                                 </TouchableOpacity>
                             </View>
 
                             {/* Current Location */}
-                            <Text style={styles.fieldLabel}>Current Location</Text>
+                            <Text style={styles.fieldLabel}>{t('currentLocation')}</Text>
                             <View style={styles.locationCard}>
                                 <View style={styles.locationIconBg}>
-
                                     <Image
                                         source={require('../../assets/location.png')}
                                         style={{ height: 22, width: 22, tintColor: '#FFFFFF' }}
@@ -474,21 +572,20 @@ const NewDashboardScreen = () => {
                                     />
                                 </View>
                                 <View style={{ flex: 1 }}>
-                                    <Text style={styles.locationLabel}>You are here</Text>
+                                    <Text style={styles.locationLabel}>{t('youAreHere')}</Text>
                                     <Text style={styles.locationAddress} numberOfLines={2}>
                                         Sector 18, Noida, Uttar Pradesh 201301
                                     </Text>
                                     <View style={styles.locationMetaRow}>
                                         <View style={styles.locationMetaDot} />
-                                        <Text style={styles.locationMeta}>GPS accuracy ± 5m</Text>
+                                        <Text style={styles.locationMeta}>{t('gpsAccuracy')}</Text>
                                     </View>
                                 </View>
                             </View>
 
                             {/* Product Name */}
-                            <Text style={styles.fieldLabel}>Product Name</Text>
+                            <Text style={styles.fieldLabel}>{t('productName')}</Text>
                             <View style={styles.productNameBox}>
-
                                 <Image
                                     source={require('../../assets/cube-outline.png')}
                                     style={{ height: 18, width: 18, tintColor: '#047282' }}
@@ -496,13 +593,14 @@ const NewDashboardScreen = () => {
                                 />
                                 <Text style={styles.productNameText}>{productName}</Text>
                             </View>
+                            <Text style={styles.summaryValue}>{t('rate')}: ₹{RATE_PER_UNIT} / unit</Text>
 
                             {/* Quantity */}
-                            <Text style={styles.fieldLabel}>Quantity</Text>
+                            <Text style={styles.fieldLabel}>{t('value')}</Text>
                             <View style={styles.inputRow}>
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="Enter quantity"
+                                    placeholder="Enter Value"
                                     placeholderTextColor="#A7B4B6"
                                     keyboardType="number-pad"
                                     value={quantity}
@@ -510,32 +608,18 @@ const NewDashboardScreen = () => {
                                 />
                             </View>
 
-                            {/* Rate (locked) */}
-                            <Text style={styles.fieldLabel}>Rate (₹{RATE_PER_UNIT} / unit)</Text>
-                            <View style={[styles.inputRow, styles.inputRowDisabled]}>
-                                <Text style={[styles.input, { color: '#6B7A7C' }]}>
-                                    {rate > 0 ? `₹ ${rate}` : '₹ 0'}
-                                </Text>
-
-                                <Image
-                                    source={require('../../assets/lock-closed.png')}
-                                    style={{ height: 16, width: 16, tintColor: '#A7B4B6' }}
-                                    resizeMode="contain"
-                                />
-                            </View>
-
                             {/* Summary */}
                             <View style={styles.summaryBox}>
                                 <View style={styles.summaryRow}>
-                                    <Text style={styles.summaryLabel}>Quantity</Text>
+                                    <Text style={styles.summaryLabel}>{t('value')}</Text>
                                     <Text style={styles.summaryValue}>{quantity || '0'} unit(s)</Text>
                                 </View>
                                 <View style={styles.summaryRow}>
-                                    <Text style={styles.summaryLabel}>Rate</Text>
+                                    <Text style={styles.summaryLabel}>{t('rate')}</Text>
                                     <Text style={styles.summaryValue}>₹ {RATE_PER_UNIT} / unit</Text>
                                 </View>
                                 <View style={[styles.summaryRow, styles.summaryTotalRow]}>
-                                    <Text style={styles.summaryTotalLabel}>Total</Text>
+                                    <Text style={styles.summaryTotalLabel}>{t('total')}</Text>
                                     <Text style={styles.summaryTotalValue}>₹ {rate}</Text>
                                 </View>
                             </View>
@@ -547,8 +631,7 @@ const NewDashboardScreen = () => {
                             disabled={!quantity}
                             activeOpacity={0.85}
                         >
-                            <Text style={styles.modalPrimaryBtnText}>Save</Text>
-
+                            <Text style={styles.modalPrimaryBtnText}>{t('save')}</Text>
                             <Image
                                 source={require('../../assets/checkmark.png')}
                                 style={{ height: 18, width: 18, tintColor: '#FFFFFF', marginLeft: 6 }}
@@ -557,6 +640,86 @@ const NewDashboardScreen = () => {
                         </TouchableOpacity>
                     </View>
                 </View>
+            </Modal>
+
+            {/* =====================================================
+                MODAL 3 — LANGUAGE SELECTOR
+                ===================================================== */}
+            <Modal
+                visible={languageModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setLanguageModalVisible(false)}
+            >
+                <TouchableOpacity
+                    style={styles.modalBackdrop}
+                    activeOpacity={1}
+                    onPress={() => setLanguageModalVisible(false)}
+                >
+                    <View style={styles.languageSheet}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Choose Language</Text>
+                            <TouchableOpacity
+                                onPress={() => setLanguageModalVisible(false)}
+                                style={styles.modalCloseBtn}
+                                activeOpacity={0.7}
+                            >
+                                <Image
+                                    source={require('../../assets/close.png')}
+                                    style={{ height: 20, width: 20, tintColor: '#6B7A7C' }}
+                                    resizeMode="contain"
+                                />
+                            </TouchableOpacity>
+                        </View>
+
+                        {LANGUAGES.map((lang) => {
+                            const selected = selectedLanguage === lang.key;
+                            return (
+                                <TouchableOpacity
+                                    key={lang.key}
+                                    style={[
+                                        styles.languageItem,
+                                        selected && styles.languageItemSelected,
+                                    ]}
+                                    activeOpacity={0.8}
+                                    onPress={async () => {
+                                        try {
+                                            await AsyncStorage.setItem(
+                                                'selectedLanguage',
+                                                lang.key
+                                            );
+
+                                            setSelectedLanguage(lang.key);
+                                            setLanguageModalVisible(false);
+                                        } catch (error) {
+                                            console.log('Error saving language:', error);
+                                        }
+                                    }}
+                                >
+                                    <View style={styles.languageIconBox}>
+                                        <Text style={styles.languageIconText}>{lang.code}</Text>
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text
+                                            style={[
+                                                styles.languageLabel,
+                                                selected && styles.languageLabelSelected,
+                                            ]}
+                                        >
+                                            {lang.label}
+                                        </Text>
+                                        <Text style={styles.languageNative}>{lang.native}</Text>
+                                    </View>
+                                    {selected && (
+                                        <View style={styles.languageCheck}>
+                                            <Text style={styles.languageCheckText}>✓</Text>
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                </TouchableOpacity>
             </Modal>
         </View>
     );
@@ -605,6 +768,26 @@ const styles = StyleSheet.create({
     subGreeting: { fontFamily: 'InstrumentSans-Regular', fontSize: 14, color: 'rgba(255,255,255,0.82)', marginTop: 4 },
     bellBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.16)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.24)' },
     bellDot: { position: 'absolute', top: 10, right: 11, width: 8, height: 8, borderRadius: 4, backgroundColor: '#FEA92F', borderWidth: 1.5, borderColor: '#047282' },
+
+    /* ============ LANGUAGE BUTTON ============ */
+    langBtn: {
+        width: 42,
+        height: 42,
+        borderRadius: 21,
+        backgroundColor: 'rgba(255,255,255,0.16)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.24)',
+        marginRight: 10,
+    },
+    langBtnText: {
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        letterSpacing: 0.3,
+    },
 
     /* SL card */
     slCard: { backgroundColor: '#FFFFFF', borderRadius: 24, marginHorizontal: 20, marginTop: -56, padding: 20, shadowColor: '#047282', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.12, shadowRadius: 24, elevation: 10 },
@@ -764,6 +947,76 @@ const styles = StyleSheet.create({
     modalPrimaryBtn: { flexDirection: 'row', height: 54, borderRadius: 14, backgroundColor: '#FEA92F', justifyContent: 'center', alignItems: 'center', marginTop: 16, shadowColor: '#FEA92F', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 6 },
     modalPrimaryBtnDisabled: { backgroundColor: '#F5D9A8', shadowOpacity: 0, elevation: 0 },
     modalPrimaryBtnText: { fontFamily: 'InstrumentSans-Bold', fontSize: 16, fontWeight: '700', color: '#FFFFFF', letterSpacing: 0.2 },
+
+    /* ============ LANGUAGE MODAL ============ */
+    languageSheet: {
+        backgroundColor: '#FFFFFF',
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        paddingHorizontal: 24,
+        paddingTop: 20,
+        paddingBottom: Platform.OS === 'ios' ? 34 : 22,
+        width: '100%',
+    },
+    languageItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F7FAFB',
+        borderRadius: 14,
+        paddingHorizontal: 14,
+        paddingVertical: 14,
+        marginBottom: 10,
+        borderWidth: 1.5,
+        borderColor: '#E4ECEE',
+    },
+    languageItemSelected: {
+        backgroundColor: '#EAF5F6',
+        borderColor: '#047282',
+    },
+    languageIconBox: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: '#047282',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 14,
+    },
+    languageIconText: {
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#FFFFFF',
+    },
+    languageLabel: {
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#0A2E33',
+    },
+    languageLabelSelected: {
+        color: '#047282',
+    },
+    languageNative: {
+        fontFamily: 'InstrumentSans-Regular',
+        fontSize: 12,
+        color: '#6B7A7C',
+        marginTop: 2,
+    },
+    languageCheck: {
+        width: 26,
+        height: 26,
+        borderRadius: 13,
+        backgroundColor: '#047282',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    languageCheckText: {
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#FFFFFF',
+    },
 });
 
 export default NewDashboardScreen;

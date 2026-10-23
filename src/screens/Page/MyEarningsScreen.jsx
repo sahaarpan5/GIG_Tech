@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
     View,
     Text,
@@ -70,10 +71,85 @@ const EARNINGS_PERIODS = [
     },
 ];
 
+
+
+const EARNINGS_TRANSLATIONS = {
+    English: {
+        title: 'My Earnings',
+        totalEarned: 'Total Earned',
+        paymentHistory: 'Payment History',
+        paid: 'Paid',
+        pending: 'Pending',
+        activities: 'activities',
+        noEarnings: 'No earnings yet',
+        emptyMessage: 'Complete activities to start earning',
+        week1: 'Week 1',
+        week2: 'Week 2',
+        week3: 'Week 3',
+        fifteenDays: '15 Days',
+        monthly: 'Monthly',
+    },
+    Hindi: {
+        title: 'मेरी कमाई',
+        totalEarned: 'कुल कमाई',
+        paymentHistory: 'भुगतान इतिहास',
+        paid: 'भुगतान किया गया',
+        pending: 'लंबित',
+        activities: 'गतिविधियाँ',
+        noEarnings: 'अभी तक कोई कमाई नहीं',
+        emptyMessage: 'कमाई शुरू करने के लिए गतिविधियाँ पूरी करें',
+        week1: 'सप्ताह 1',
+        week2: 'सप्ताह 2',
+        week3: 'सप्ताह 3',
+        fifteenDays: '15 दिन',
+        monthly: 'मासिक',
+    },
+    Bengali: {
+        title: 'আমার উপার্জন',
+        totalEarned: 'মোট উপার্জন',
+        paymentHistory: 'পেমেন্টের ইতিহাস',
+        paid: 'পরিশোধিত',
+        pending: 'বাকি',
+        activities: 'টি কার্যক্রম',
+        noEarnings: 'এখনও কোনো উপার্জন নেই',
+        emptyMessage: 'উপার্জন শুরু করতে কার্যক্রম সম্পূর্ণ করুন',
+        week1: 'প্রথম সপ্তাহ',
+        week2: 'দ্বিতীয় সপ্তাহ',
+        week3: 'তৃতীয় সপ্তাহ',
+        fifteenDays: '১৫ দিন',
+        monthly: 'মাসিক',
+    },
+};
+
+
 const TOTAL_EARNED = 18450;
 const CHANGE_PERCENT = 12;
 
 const MyEarningsScreen = ({ navigation }) => {
+    const [selectedLanguage, setSelectedLanguage] = useState('English');
+    const t = (key) =>
+        EARNINGS_TRANSLATIONS[selectedLanguage]?.[key] ??
+        EARNINGS_TRANSLATIONS.English[key] ??
+        key;
+
+    useEffect(() => {
+        const loadLanguage = async () => {
+            try {
+                const savedLanguage = await AsyncStorage.getItem('selectedLanguage');
+
+                if (EARNINGS_TRANSLATIONS[savedLanguage]) {
+                    setSelectedLanguage(savedLanguage);
+                }
+            } catch (error) {
+                console.log('Error loading language:', error);
+            }
+        };
+
+        loadLanguage();
+    }, []);
+
+
+
     /* ---------- Card renderer ---------- */
     const renderItem = ({ item }) => (
         <View style={styles.card}>
@@ -122,7 +198,7 @@ const MyEarningsScreen = ({ navigation }) => {
                             item.status === 'paid' ? styles.statusTextPaid : styles.statusTextPending,
                         ]}
                     >
-                        {item.status === 'paid' ? 'Paid' : 'Pending'}
+                        {t(item.status === 'paid' ? 'paid' : 'pending')}
                     </Text>
                 </View>
             </View>
@@ -137,7 +213,7 @@ const MyEarningsScreen = ({ navigation }) => {
                         style={{ height: 13, width: 13, tintColor: '#6B7A7C' }}
                         resizeMode="contain"
                     />
-                    <Text style={styles.activitiesText}>{item.activities} activities</Text>
+                    <Text style={styles.activitiesText}>{item.activities} {t('activities')}</Text>
                 </View>
 
                 <Text style={styles.cardAmount}>₹ {item.amount.toLocaleString()}</Text>
@@ -168,7 +244,7 @@ const MyEarningsScreen = ({ navigation }) => {
                         />
                     </TouchableOpacity>
 
-                    <Text style={styles.headerTitle}>My Earnings</Text>
+                    <Text style={styles.headerTitle}>{t('title')}</Text>
 
                     <View style={{ width: 38 }} />
                 </View>
@@ -176,10 +252,10 @@ const MyEarningsScreen = ({ navigation }) => {
                 {/* Summary card */}
                 <View style={styles.summaryCard}>
                     <View style={{ flex: 1 }}>
-                        <Text style={styles.summaryLabel}>Total Earned</Text>
+                        <Text style={styles.summaryLabel}>{t('totalEarned')}</Text>
                         <Text style={styles.summaryValue}>₹ {TOTAL_EARNED.toLocaleString()}</Text>
 
-                        
+
                     </View>
 
                     <View style={styles.summaryIconWrap}>
@@ -201,7 +277,7 @@ const MyEarningsScreen = ({ navigation }) => {
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
                 ListHeaderComponent={
-                    <Text style={styles.sectionLabel}>Payment History</Text>
+                    <Text style={styles.sectionLabel}>{t('paymentHistory')}</Text>
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyWrap}>
@@ -212,9 +288,9 @@ const MyEarningsScreen = ({ navigation }) => {
                             resizeMode="contain"
                         />
 
-                        <Text style={styles.emptyTitle}>No earnings yet</Text>
+                        <Text style={styles.emptyTitle}>{t('noEarnings')}</Text>
                         <Text style={styles.emptySubtitle}>
-                            Complete activities to start earning
+                            {t('emptyMessage')}
                         </Text>
                     </View>
                 }

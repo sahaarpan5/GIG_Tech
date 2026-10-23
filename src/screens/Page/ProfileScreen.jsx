@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
     View,
     Text,
@@ -23,6 +24,117 @@ const QUALIFICATIONS = [
 
 const GENDERS = ['Male', 'Female', 'Other'];
 
+
+const PROFILE_TRANSLATIONS = {
+    English: {
+        personalInfo: 'Personal Information',
+        fullName: 'Full Name',
+        enterFullName: 'Enter your full name',
+        mobile: 'Mobile Number',
+        enterMobile: 'Enter 10-digit mobile',
+        email: 'Email Address',
+        gender: 'Gender',
+        male: 'Male',
+        female: 'Female',
+        other: 'Other',
+        location: 'Location',
+        enterCity: 'Enter your city',
+        dob: 'Date of Birth',
+        qualification: 'Highest Qualification',
+        identity: 'Identity Documents',
+        aadhaar: 'Aadhaar Number',
+        aadhaarFile: 'Aadhaar File',
+        uploadAadhaar: 'Upload Aadhaar',
+        pan: 'PAN Number',
+        panFile: 'PAN File',
+        uploadPAN: 'Upload PAN',
+        bankDetails: 'Bank Details',
+        bankName: 'Name as per Bank',
+        bankNamePlaceholder: 'Name on bank account',
+        accountNo: 'Account Number',
+        enterAccount: 'Enter account number',
+        ifsc: 'IFSC Code',
+        bankFile: 'Bank File (Cancelled Cheque / Passbook)',
+        uploadBank: 'Upload bank document',
+        uploadHint: 'JPG, PNG, PDF • Max 5 MB',
+        save: 'Save Changes',
+        yourName: 'Your Name',
+        yourEmail: 'your@email.com',
+    },
+
+    Bengali: {
+        personalInfo: 'ব্যক্তিগত তথ্য',
+        fullName: 'পুরো নাম',
+        enterFullName: 'আপনার পুরো নাম লিখুন',
+        mobile: 'মোবাইল নম্বর',
+        enterMobile: '১০ সংখ্যার মোবাইল নম্বর লিখুন',
+        email: 'ইমেল ঠিকানা',
+        gender: 'লিঙ্গ',
+        male: 'পুরুষ',
+        female: 'মহিলা',
+        other: 'অন্যান্য',
+        location: 'ঠিকানা',
+        enterCity: 'আপনার শহরের নাম লিখুন',
+        dob: 'জন্ম তারিখ',
+        qualification: 'সর্বোচ্চ শিক্ষাগত যোগ্যতা',
+        identity: 'পরিচয়পত্র',
+        aadhaar: 'আধার নম্বর',
+        aadhaarFile: 'আধার ফাইল',
+        uploadAadhaar: 'আধার আপলোড করুন',
+        pan: 'প্যান নম্বর',
+        panFile: 'প্যান ফাইল',
+        uploadPAN: 'প্যান আপলোড করুন',
+        bankDetails: 'ব্যাঙ্কের বিবরণ',
+        bankName: 'ব্যাঙ্কের নথি অনুযায়ী নাম',
+        bankNamePlaceholder: 'ব্যাঙ্ক অ্যাকাউন্টের নাম',
+        accountNo: 'অ্যাকাউন্ট নম্বর',
+        enterAccount: 'অ্যাকাউন্ট নম্বর লিখুন',
+        ifsc: 'IFSC কোড',
+        bankFile: 'ব্যাঙ্কের নথি (বাতিল চেক / পাসবুক)',
+        uploadBank: 'ব্যাঙ্কের নথি আপলোড করুন',
+        uploadHint: 'JPG, PNG, PDF • সর্বোচ্চ ৫ MB',
+        save: 'পরিবর্তন সংরক্ষণ করুন',
+        yourName: 'আপনার নাম',
+        yourEmail: 'আপনার ইমেল',
+    },
+
+    Hindi: {
+        personalInfo: 'व्यक्तिगत जानकारी',
+        fullName: 'पूरा नाम',
+        enterFullName: 'अपना पूरा नाम दर्ज करें',
+        mobile: 'मोबाइल नंबर',
+        enterMobile: '10 अंकों का मोबाइल नंबर दर्ज करें',
+        email: 'ईमेल पता',
+        gender: 'लिंग',
+        male: 'पुरुष',
+        female: 'महिला',
+        other: 'अन्य',
+        location: 'स्थान',
+        enterCity: 'अपने शहर का नाम दर्ज करें',
+        dob: 'जन्म तिथि',
+        qualification: 'उच्चतम शैक्षणिक योग्यता',
+        identity: 'पहचान दस्तावेज़',
+        aadhaar: 'आधार नंबर',
+        aadhaarFile: 'आधार फ़ाइल',
+        uploadAadhaar: 'आधार अपलोड करें',
+        pan: 'पैन नंबर',
+        panFile: 'पैन फ़ाइल',
+        uploadPAN: 'पैन अपलोड करें',
+        bankDetails: 'बैंक विवरण',
+        bankName: 'बैंक रिकॉर्ड के अनुसार नाम',
+        bankNamePlaceholder: 'बैंक खाते का नाम',
+        accountNo: 'खाता नंबर',
+        enterAccount: 'खाता नंबर दर्ज करें',
+        ifsc: 'IFSC कोड',
+        bankFile: 'बैंक दस्तावेज़ (रद्द चेक / पासबुक)',
+        uploadBank: 'बैंक दस्तावेज़ अपलोड करें',
+        uploadHint: 'JPG, PNG, PDF • अधिकतम 5 MB',
+        save: 'बदलाव सहेजें',
+        yourName: 'आपका नाम',
+        yourEmail: 'आपका ईमेल',
+    },
+};
+
 const ProfileScreen = () => {
     /* ---- Personal ---- */
     const [name, setName] = useState('Rahul Sharma');
@@ -42,6 +154,29 @@ const ProfileScreen = () => {
     const [bankName, setBankName] = useState('Rahul Sharma');
     const [accountNo, setAccountNo] = useState('1234567890');
     const [ifsc, setIfsc] = useState('SBIN0001234');
+    const [selectedLanguage, setSelectedLanguage] = useState('English');
+    const t = (key) =>
+        PROFILE_TRANSLATIONS[selectedLanguage]?.[key] ??
+        PROFILE_TRANSLATIONS.English[key] ??
+        key;
+
+    useEffect(() => {
+        const loadLanguage = async () => {
+            try {
+                const savedLanguage = await AsyncStorage.getItem(
+                    'selectedLanguage'
+                );
+
+                if (savedLanguage && PROFILE_TRANSLATIONS[savedLanguage]) {
+                    setSelectedLanguage(savedLanguage);
+                }
+            } catch (error) {
+                console.log('Error loading saved language:', error);
+            }
+        };
+
+        loadLanguage();
+    }, []);
 
     return (
         <View style={styles.container}>
@@ -82,29 +217,29 @@ const ProfileScreen = () => {
                 {/* ============ FORM CARD ============ */}
                 <View style={styles.formCard}>
                     {/* ---------- SECTION: Personal ---------- */}
-                    <SectionHeader icon={require('../../assets/person-outline.png')} title="Personal Information" iconBg="#F0EDFF" iconColor="#7B5CFF" />
+                    <SectionHeader icon={require('../../assets/person-outline.png')} title={t('personalInfo')} iconBg="#F0EDFF" iconColor="#7B5CFF" />
 
-                    <FieldLabel>Full Name</FieldLabel>
-                    <InputRow  icon={require('../../assets/person-outline.png')} value={name} onChangeText={setName} placeholder="Enter your full name" />
+                    <FieldLabel>{t('fullName')}</FieldLabel>
+                    <InputRow icon={require('../../assets/person-outline.png')} value={name} onChangeText={setName}  placeholder={t('enterFullName')} />
 
-                    <FieldLabel>Mobile Number</FieldLabel>
+                    <FieldLabel>{t('mobile')}</FieldLabel>
                     <View style={styles.inputRow}>
                         <Text style={styles.countryCode}>+91</Text>
                         <TextInput
                             style={styles.input}
                             value={mobile}
                             onChangeText={setMobile}
-                            placeholder="Enter 10-digit mobile"
+                            placeholder={t('enterMobile')}
                             placeholderTextColor="#A7B4B6"
                             keyboardType="number-pad"
                             maxLength={10}
                         />
                     </View>
 
-                    <FieldLabel>Email Address</FieldLabel>
-                    <InputRow  icon={require('../../assets/mail.png')} value={email} onChangeText={setEmail} placeholder="you@example.com" keyboardType="email-address" autoCapitalize="none" />
+                    <FieldLabel>{t('email')}</FieldLabel>
+                    <InputRow icon={require('../../assets/mail.png')} value={email} onChangeText={setEmail} placeholder="you@example.com" keyboardType="email-address" autoCapitalize="none" />
 
-                    <FieldLabel>Gender</FieldLabel>
+                    <FieldLabel>{t('gender')}</FieldLabel>
                     <View style={styles.chipRow}>
                         {GENDERS.map((g) => {
                             const selected = gender === g;
@@ -121,10 +256,10 @@ const ProfileScreen = () => {
                         })}
                     </View>
 
-                    <FieldLabel>Location</FieldLabel>
-                    <InputRow icon={require('../../assets/location.png')}value={location} onChangeText={setLocation} placeholder="Enter your city" />
+                    <FieldLabel>{t('location')}</FieldLabel>
+                    <InputRow icon={require('../../assets/location.png')} value={location} onChangeText={setLocation} placeholder={t('enterCity')} />
 
-                    <FieldLabel>Date of Birth</FieldLabel>
+                    <FieldLabel>{t('dob')}</FieldLabel>
                     <TouchableOpacity style={styles.inputRow} activeOpacity={0.7}>
 
                         <Image
@@ -141,7 +276,7 @@ const ProfileScreen = () => {
                         />
                     </TouchableOpacity>
 
-                    <FieldLabel>Highest Qualification</FieldLabel>
+                    <FieldLabel>{t('qualification')}</FieldLabel>
                     <TouchableOpacity
                         style={styles.inputRow}
                         activeOpacity={0.8}
@@ -195,38 +330,38 @@ const ProfileScreen = () => {
                     )}
 
                     {/* ---------- SECTION: Identity ---------- */}
-                    <SectionHeader icon={require('../../assets/security.png')} title="Identity Documents" iconBg="#E8F4FF" iconColor="#2C7BE5" />
+                    <SectionHeader icon={require('../../assets/security.png')} title={t('identity')} iconBg="#E8F4FF" iconColor="#2C7BE5" />
 
-                    <FieldLabel>Aadhaar Number</FieldLabel>
-                    <InputRow  icon={require('../../assets/card-outline.png')} value={aadhaarNo} onChangeText={setAadhaarNo} placeholder="XXXX XXXX XXXX" keyboardType="number-pad" />
+                    <FieldLabel>{t('aadhaar')}</FieldLabel>
+                    <InputRow icon={require('../../assets/card-outline.png')} value={aadhaarNo} onChangeText={setAadhaarNo} placeholder="XXXX XXXX XXXX" keyboardType="number-pad" />
 
-                    <FieldLabel>Aadhaar File</FieldLabel>
-                    <UploadRow label="Upload Aadhaar" />
+                    <FieldLabel>{t('aadhaarFile')}</FieldLabel>
+                    <UploadRow label={t('uploadAadhaar')} />
 
-                    <FieldLabel>PAN Number</FieldLabel>
+                    <FieldLabel>{t('pan')}</FieldLabel>
                     <InputRow icon={require('../../assets/card-outline.png')} value={panNo} onChangeText={setPanNo} placeholder="ABCDE1234F" autoCapitalize="characters" />
 
-                    <FieldLabel>PAN File</FieldLabel>
-                    <UploadRow label="Upload PAN" />
+                    <FieldLabel>{t('panFile')}</FieldLabel>
+                    <UploadRow label={t('uploadPAN')} />
 
                     {/* ---------- SECTION: Bank ---------- */}
-                    <SectionHeader icon={require('../../assets/bank.png')} title="Bank Details" iconBg="#E4F9EC" iconColor="#22A06B" />
+                    <SectionHeader icon={require('../../assets/bank.png')} title={t('bankDetails')} iconBg="#E4F9EC" iconColor="#22A06B" />
 
-                    <FieldLabel>Name as per Bank</FieldLabel>
-                    <InputRow icon={require('../../assets/person-outline.png')} value={bankName} onChangeText={setBankName} placeholder="Name on bank account" />
+                    <FieldLabel>{t('bankName')}</FieldLabel>
+                    <InputRow icon={require('../../assets/person-outline.png')} value={bankName} onChangeText={setBankName} placeholder={t('bankNamePlaceholder')} />
 
-                    <FieldLabel>Account Number</FieldLabel>
-                    <InputRow  icon={require('../../assets/keypad-outline.png')} value={accountNo} onChangeText={setAccountNo} placeholder="Enter account number" keyboardType="number-pad" />
+                    <FieldLabel>{t('accountNo')}</FieldLabel>
+                    <InputRow icon={require('../../assets/keypad-outline.png')} value={accountNo} onChangeText={setAccountNo} placeholder={t('enterAccount')} keyboardType="number-pad" />
 
-                    <FieldLabel>IFSC Code</FieldLabel>
-                    <InputRow  icon={require('../../assets/bank.png')} value={ifsc} onChangeText={setIfsc} placeholder="e.g. SBIN0001234" autoCapitalize="characters" />
+                    <FieldLabel>{t('ifsc')}</FieldLabel>
+                    <InputRow icon={require('../../assets/bank.png')} value={ifsc} onChangeText={setIfsc} placeholder="e.g. SBIN0001234" autoCapitalize="characters" />
 
-                    <FieldLabel>Bank File (Cancelled Cheque / Passbook)</FieldLabel>
-                    <UploadRow label="Upload bank document" />
+                    <FieldLabel>{t('bankFile')}</FieldLabel>
+                    <UploadRow label={t('uploadBank')} />
 
                     {/* ---------- SAVE ---------- */}
                     <TouchableOpacity style={styles.saveBtn} activeOpacity={0.85}>
-                        <Text style={styles.saveBtnText}>Save Changes</Text>
+                        <Text style={styles.saveBtnText}>{t('save')}</Text>
 
                         <Image
                             source={require('../../assets/checked.png')}

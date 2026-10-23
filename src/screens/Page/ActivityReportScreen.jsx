@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -9,6 +9,7 @@ import {
     StatusBar,
     Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 /* ------- Sample data (replace with API) ------- */
@@ -70,8 +71,67 @@ const ACTIVITY_DATA = [
     },
 ];
 
+
+const REPORT_TRANSLATIONS = {
+    English: {
+        title: 'Activity Report',
+        activities: 'Activities',
+        totalRate: 'Total Rate',
+        totalQty: 'Total Qty',
+        qty: 'Qty',
+        rate: 'Rate',
+        noActivities: 'No activities yet',
+        emptyMessage: 'Your completed activities will appear here',
+    },
+    Bengali: {
+        title: 'কাজের রিপোর্ট',
+        activities: 'কাজের সংখ্যা',
+        totalRate: 'মোট দর',
+        totalQty: 'মোট পরিমাণ',
+        qty: 'পরিমাণ',
+        rate: 'দর',
+        noActivities: 'এখনও কোনো কাজ নেই',
+        emptyMessage: 'আপনার সম্পন্ন করা কাজ এখানে দেখা যাবে',
+    },
+    Hindi: {
+        title: 'कार्य रिपोर्ट',
+        activities: 'कार्यों की संख्या',
+        totalRate: 'कुल दर',
+        totalQty: 'कुल मात्रा',
+        qty: 'मात्रा',
+        rate: 'दर',
+        noActivities: 'अभी कोई कार्य नहीं है',
+        emptyMessage: 'आपके पूरे किए गए कार्य यहाँ दिखाई देंगे',
+    },
+};
+
 const ActivityReportScreen = ({ navigation }) => {
     const totalAmount = ACTIVITY_DATA.reduce((sum, item) => sum + item.rate, 0);
+    const t = (key) =>
+        REPORT_TRANSLATIONS[selectedLanguage]?.[key] ??
+        REPORT_TRANSLATIONS.English[key] ??
+        key;
+
+    const [selectedLanguage, setSelectedLanguage] = useState('English');
+
+
+    useEffect(() => {
+        const loadLanguage = async () => {
+            try {
+                const savedLanguage = await AsyncStorage.getItem(
+                    'selectedLanguage'
+                );
+
+                if (savedLanguage && REPORT_TRANSLATIONS[savedLanguage]) {
+                    setSelectedLanguage(savedLanguage);
+                }
+            } catch (error) {
+                console.log('Error loading saved language:', error);
+            }
+        };
+
+        loadLanguage();
+    }, []);
 
     /* ---------- Card renderer ---------- */
     const renderItem = ({ item }) => (
@@ -102,11 +162,11 @@ const ActivityReportScreen = ({ navigation }) => {
 
                     <View style={styles.metaRow}>
                         <View style={styles.metaChip}>
-                            <Text style={styles.metaChipLabel}>Qty</Text>
+                            <Text style={styles.metaChipLabel}>{t('qty')}</Text>
                             <Text style={styles.metaChipValue}>{item.quantity}</Text>
                         </View>
                         <View style={[styles.metaChip, styles.metaChipRate]}>
-                            <Text style={[styles.metaChipLabel, { color: '#F5A623' }]}>Rate</Text>
+                            <Text style={[styles.metaChipLabel, { color: '#F5A623' }]}> {t('rate')}</Text>
                             <Text style={[styles.metaChipValue, { color: '#F5A623' }]}>
                                 ₹{item.rate}
                             </Text>
@@ -155,7 +215,7 @@ const ActivityReportScreen = ({ navigation }) => {
                         />
                     </TouchableOpacity>
 
-                    <Text style={styles.headerTitle}>Activity Report</Text>
+                    <Text style={styles.headerTitle}>{t('title')}</Text>
 
                     <View style={{ width: 38 }} />
                 </View>
@@ -164,19 +224,19 @@ const ActivityReportScreen = ({ navigation }) => {
                 <View style={styles.summaryStrip}>
                     <View style={styles.summaryItem}>
                         <Text style={styles.summaryValue}>{ACTIVITY_DATA.length}</Text>
-                        <Text style={styles.summaryLabel}>Activities</Text>
+                        <Text style={styles.summaryLabel}>{t('activities')}</Text>
                     </View>
                     <View style={styles.summaryDivider} />
                     <View style={styles.summaryItem}>
                         <Text style={styles.summaryValue}>₹{totalAmount.toLocaleString()}</Text>
-                        <Text style={styles.summaryLabel}>Total Rate</Text>
+                        <Text style={styles.summaryLabel}>{t('totalRate')}</Text>
                     </View>
                     <View style={styles.summaryDivider} />
                     <View style={styles.summaryItem}>
                         <Text style={styles.summaryValue}>
                             {ACTIVITY_DATA.reduce((s, i) => s + i.quantity, 0)}
                         </Text>
-                        <Text style={styles.summaryLabel}>Total Qty</Text>
+                        <Text style={styles.summaryLabel}>{t('totalQty')}</Text>
                     </View>
                 </View>
             </View>
@@ -190,15 +250,15 @@ const ActivityReportScreen = ({ navigation }) => {
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
                     <View style={styles.emptyWrap}>
-                        
+
                         <Image
                             source={require('../../assets/google-docs.png')}
                             style={{ height: 52, width: 52, tintColor: '#D4E9EC' }}
                             resizeMode="contain"
                         />
-                        <Text style={styles.emptyTitle}>No activities yet</Text>
+                        <Text style={styles.emptyTitle}>{t('noActivities')}</Text>
                         <Text style={styles.emptySubtitle}>
-                            Your completed activities will appear here
+                             {t('emptyMessage')}
                         </Text>
                     </View>
                 }
