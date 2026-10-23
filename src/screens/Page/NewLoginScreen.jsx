@@ -15,15 +15,16 @@ import {
     ImageBackground,
     Image,
     Modal,
+    PanResponder,
 } from 'react-native';
 
 const HERO_IMAGE =
     'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&q=80&auto=format&fit=crop';
 
 const TABS = [
-  { key: 'otp', translationKey: 'otp' },
-  { key: 'password', translationKey: 'passwordTab' },
-  { key: 'mpin', translationKey: 'mpinTab' },
+    { key: 'otp', translationKey: 'otp' },
+    { key: 'password', translationKey: 'passwordTab' },
+    { key: 'mpin', translationKey: 'mpinTab' },
 ];
 
 const LANGUAGES = [
@@ -31,8 +32,6 @@ const LANGUAGES = [
     { key: 'Hindi', label: 'Hindi', native: 'हिन्दी', code: 'हि' },
     { key: 'Bengali', label: 'Bengali', native: 'বাংলা', code: 'বাং' },
 ];
-
-
 
 const LOGIN_TRANSLATIONS = {
     English: {
@@ -73,6 +72,25 @@ const LOGIN_TRANSLATIONS = {
         enterCredentials: 'Please enter user ID and password.',
         invalidMpin: 'Invalid input',
         enterMobileAndMpin: 'Please enter mobile and 4-digit MPIN.',
+
+        /* DPDP consent */
+        dpdpTitle: 'DPDP Consent',
+        dpdpText: `Under the Digital Personal Data Protection (DPDP) Act, 2023, I hereby give my free, specific, informed, unconditional and unambiguous consent to the Company to:
+
+• Collect, store, process and use my personal data (name, contact details, location, activity data, selfies, documents) for the purpose of providing services under this platform.
+• Share my data with authorised service partners, verification agencies and payment processors, where required.
+• Retain my data as long as my account remains active, or as required by law.
+
+I understand that:
+• I have the right to withdraw my consent at any time via the Profile section.
+• I have the right to access, correct, and request erasure of my personal data.
+• My data will be processed strictly in accordance with the DPDP Act, 2023.
+
+By signing below, I acknowledge that I have read the above consent and agree to the processing of my personal data.`,
+        yourSignature: 'Your Signature',
+        signHere: 'Sign here with your finger',
+        clearSignature: 'Clear signature',
+        agreeContinue: 'Agree & Continue',
     },
 
     Hindi: {
@@ -113,6 +131,24 @@ const LOGIN_TRANSLATIONS = {
         enterCredentials: 'कृपया यूज़र आईडी और पासवर्ड दर्ज करें।',
         invalidMpin: 'अमान्य जानकारी',
         enterMobileAndMpin: 'कृपया मोबाइल नंबर और 4 अंकों का एमपिन दर्ज करें।',
+
+        dpdpTitle: 'DPDP सहमति',
+        dpdpText: `डिजिटल पर्सनल डेटा प्रोटेक्शन (DPDP) अधिनियम, 2023 के अंतर्गत, मैं कंपनी को अपना स्वतंत्र, विशिष्ट, सूचित, बिना शर्त और स्पष्ट सहमति देता/देती हूँ कि:
+
+• सेवाएँ प्रदान करने के उद्देश्य से मेरा व्यक्तिगत डेटा (नाम, संपर्क विवरण, स्थान, गतिविधि डेटा, सेल्फी, दस्तावेज़) एकत्र, संग्रहित, संसाधित और उपयोग किया जाए।
+• आवश्यकता पड़ने पर मेरा डेटा अधिकृत सेवा भागीदारों, सत्यापन एजेंसियों और भुगतान प्रोसेसर के साथ साझा किया जाए।
+• मेरा खाता सक्रिय रहने तक या कानून द्वारा आवश्यक अवधि तक मेरा डेटा संरक्षित रखा जाए।
+
+मैं समझता/समझती हूँ कि:
+• मुझे प्रोफ़ाइल अनुभाग से कभी भी अपनी सहमति वापस लेने का अधिकार है।
+• मुझे अपने व्यक्तिगत डेटा तक पहुँचने, उसे सुधारने और मिटाने का अनुरोध करने का अधिकार है।
+• मेरा डेटा DPDP अधिनियम, 2023 के अनुसार कड़ाई से संसाधित किया जाएगा।
+
+नीचे हस्ताक्षर करके, मैं पुष्टि करता/करती हूँ कि मैंने उपरोक्त सहमति पढ़ ली है और अपने व्यक्तिगत डेटा के प्रसंस्करण के लिए सहमत हूँ।`,
+        yourSignature: 'आपके हस्ताक्षर',
+        signHere: 'यहाँ उँगली से हस्ताक्षर करें',
+        clearSignature: 'हस्ताक्षर मिटाएँ',
+        agreeContinue: 'सहमत हों और आगे बढ़ें',
     },
 
     Bengali: {
@@ -153,9 +189,115 @@ const LOGIN_TRANSLATIONS = {
         enterCredentials: 'অনুগ্রহ করে ইউজার আইডি ও পাসওয়ার্ড লিখুন।',
         invalidMpin: 'ভুল তথ্য',
         enterMobileAndMpin: 'অনুগ্রহ করে মোবাইল নম্বর ও ৪ সংখ্যার এমপিন লিখুন।',
+
+        dpdpTitle: 'DPDP সম্মতি',
+        dpdpText: `ডিজিটাল পার্সোনাল ডেটা প্রোটেকশন (DPDP) আইন, ২০২৩-এর অধীনে, আমি কোম্পানিকে আমার স্বাধীন, নির্দিষ্ট, অবহিত, নিঃশর্ত এবং স্পষ্ট সম্মতি দিচ্ছি যে:
+
+• পরিষেবা প্রদানের উদ্দেশ্যে আমার ব্যক্তিগত ডেটা (নাম, যোগাযোগের তথ্য, অবস্থান, কার্যকলাপ ডেটা, সেলফি, নথি) সংগ্রহ, সংরক্ষণ, প্রক্রিয়া এবং ব্যবহার করা হবে।
+• প্রয়োজনে আমার ডেটা অনুমোদিত পরিষেবা অংশীদার, যাচাইকরণ সংস্থা এবং পেমেন্ট প্রসেসরদের সাথে শেয়ার করা হবে।
+• আমার অ্যাকাউন্ট সক্রিয় থাকা পর্যন্ত বা আইন অনুযায়ী প্রয়োজনীয় সময় পর্যন্ত আমার ডেটা সংরক্ষণ করা হবে।
+
+আমি বুঝি যে:
+• প্রোফাইল বিভাগ থেকে আমি যেকোনো সময় আমার সম্মতি প্রত্যাহার করার অধিকারী।
+• আমার ব্যক্তিগত ডেটা অ্যাক্সেস, সংশোধন এবং মুছে ফেলার অনুরোধ করার অধিকার আমার আছে।
+• DPDP আইন, ২০২৩ অনুযায়ী কঠোরভাবে আমার ডেটা প্রক্রিয়া করা হবে।
+
+নিচে স্বাক্ষর করে, আমি স্বীকার করছি যে আমি উপরের সম্মতি পড়েছি এবং আমার ব্যক্তিগত ডেটা প্রক্রিয়াকরণে সম্মত আছি।`,
+        yourSignature: 'আপনার স্বাক্ষর',
+        signHere: 'এখানে আঙুল দিয়ে স্বাক্ষর করুন',
+        clearSignature: 'স্বাক্ষর মুছে ফেলুন',
+        agreeContinue: 'সম্মত হন এবং এগিয়ে যান',
     },
 };
 
+/* =====================================================
+   SIGNATURE PAD
+   ===================================================== */
+const SignaturePad = ({ onSignedChange, placeholder }) => {
+    const [paths, setPaths] = useState([]);
+    const currentPath = useRef([]);
+    const padHeight = 160;
+
+    const panResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: () => true,
+            onPanResponderGrant: (evt) => {
+                const { locationX, locationY } = evt.nativeEvent;
+                currentPath.current = [{ x: locationX, y: locationY }];
+                setPaths((prev) => [...prev, [...currentPath.current]]);
+            },
+            onPanResponderMove: (evt) => {
+                const { locationX, locationY } = evt.nativeEvent;
+                currentPath.current.push({ x: locationX, y: locationY });
+                setPaths((prev) => {
+                    const next = [...prev];
+                    next[next.length - 1] = [...currentPath.current];
+                    return next;
+                });
+            },
+            onPanResponderRelease: () => {
+                onSignedChange(true);
+            },
+        })
+    ).current;
+
+    const clear = () => {
+        setPaths([]);
+        currentPath.current = [];
+        onSignedChange(false);
+    };
+
+    return (
+        <View>
+            <View
+                style={[styles.signatureBox, { height: padHeight }]}
+                {...panResponder.panHandlers}
+            >
+                {paths.length === 0 && (
+                    <Text style={styles.signaturePlaceholder}>{placeholder}</Text>
+                )}
+                {paths.map((path, pathIndex) => (
+                    <View key={pathIndex} style={StyleSheet.absoluteFillObject} pointerEvents="none">
+                        {path.map((point, i) => {
+                            if (i === 0) return null;
+                            const prev = path[i - 1];
+                            const dx = point.x - prev.x;
+                            const dy = point.y - prev.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+                            return (
+                                <View
+                                    key={i}
+                                    style={{
+                                        position: 'absolute',
+                                        left: prev.x,
+                                        top: prev.y,
+                                        width: dist,
+                                        height: 2.5,
+                                        backgroundColor: '#0A2E33',
+                                        borderRadius: 2,
+                                        transform: [{ translateY: -1.25 }, { rotate: `${angle}deg` }],
+                                        transformOrigin: 'left center',
+                                    }}
+                                />
+                            );
+                        })}
+                    </View>
+                ))}
+            </View>
+
+            <TouchableOpacity onPress={clear} style={styles.clearBtn} activeOpacity={0.7}>
+                <Image
+                    source={require('../../assets/refresh-outline.png')}
+                    style={{ height: 14, width: 14, tintColor: '#E63E6D' }}
+                    resizeMode="contain"
+                />
+                <Text style={styles.clearBtnText}>{'Clear signature'}</Text>
+            </TouchableOpacity>
+        </View>
+    );
+};
 
 const NewLoginScreen = () => {
     const navigation = useNavigation();
@@ -181,18 +323,19 @@ const NewLoginScreen = () => {
     const [languageModalVisible, setLanguageModalVisible] = useState(false);
     const [selectedLanguage, setSelectedLanguage] = useState('English');
 
+    // DPDP consent state
+    const [dpdpVisible, setDpdpVisible] = useState(false);
+    const [isDpdpSigned, setIsDpdpSigned] = useState(false);
 
     const t = (key) =>
         LOGIN_TRANSLATIONS[selectedLanguage]?.[key] ??
         LOGIN_TRANSLATIONS.English[key] ??
         key;
 
-
     useEffect(() => {
         const loadLanguage = async () => {
             try {
                 const savedLanguage = await AsyncStorage.getItem('selectedLanguage');
-
                 if (LOGIN_TRANSLATIONS[savedLanguage]) {
                     setSelectedLanguage(savedLanguage);
                 }
@@ -200,19 +343,16 @@ const NewLoginScreen = () => {
                 console.log('Error loading language:', error);
             }
         };
-
         loadLanguage();
     }, []);
 
     const handleLanguageChange = async (language) => {
         setSelectedLanguage(language);
-
         try {
             await AsyncStorage.setItem('selectedLanguage', language);
         } catch (error) {
             console.log('Error saving language:', error);
         }
-
         setLanguageModalVisible(false);
     };
 
@@ -250,30 +390,42 @@ const NewLoginScreen = () => {
         }
     };
 
+    /* ---------- Open DPDP consent on any successful login ---------- */
+    const openDpdpConsent = () => {
+        setIsDpdpSigned(false);
+        setDpdpVisible(true);
+    };
+
     const handleOtpLogin = () => {
         if (otp.join('').length !== 6) {
-            Alert.alert('Invalid OTP', 'Please enter the 6-digit OTP.');
+            Alert.alert(t('invalidOtp'), t('enterSixDigitOtp'));
             return;
         }
         console.log('OTP login:', mobile, otp.join(''));
-        navigation.replace('NewDashboardScreen');
+        openDpdpConsent();
     };
 
     const handlePasswordLogin = () => {
         if (!userId || !password) {
-            Alert.alert('Missing fields', 'Please enter user ID and password.');
+            Alert.alert(t('missingFields'), t('enterCredentials'));
             return;
         }
         console.log('Password login:', userId, password);
-        navigation.replace('NewDashboardScreen');
+        openDpdpConsent();
     };
 
     const handleMpinLogin = () => {
         if (mpinMobile.length !== 10 || mpin.join('').length !== 4) {
-            Alert.alert('Invalid input', 'Please enter mobile and 4-digit MPIN.');
+            Alert.alert(t('invalidMpin'), t('enterMobileAndMpin'));
             return;
         }
         console.log('MPIN login:', mpinMobile, mpin.join(''));
+        openDpdpConsent();
+    };
+
+    const handleDpdpAgree = () => {
+        if (!isDpdpSigned) return;
+        setDpdpVisible(false);
         navigation.replace('NewDashboardScreen');
     };
 
@@ -295,15 +447,11 @@ const NewLoginScreen = () => {
                     style={styles.hero}
                     resizeMode="cover"
                 >
-                    {/* Base teal overlay */}
                     <View style={styles.heroOverlay} />
-
-                    {/* Decorative colorful circles */}
                     <View style={styles.heroCircle1} />
                     <View style={styles.heroCircle2} />
                     <View style={styles.heroCircle3} />
 
-                    {/* Language button — top right */}
                     <TouchableOpacity
                         style={styles.langBtn}
                         activeOpacity={0.8}
@@ -348,7 +496,7 @@ const NewLoginScreen = () => {
                                     activeOpacity={0.8}
                                 >
                                     <Text style={[styles.tabText, active && styles.tabTextActive]}>
-                                       {t(tab.translationKey)}
+                                        {t(tab.translationKey)}
                                     </Text>
                                 </TouchableOpacity>
                             );
@@ -391,7 +539,7 @@ const NewLoginScreen = () => {
                                             style={styles.changeLink}
                                             onPress={() => { setOtpSent(false); setOtp(['', '', '', '', '', '']); }}
                                         >
-                                            Change
+                                            {t('change')}
                                         </Text>
                                     </Text>
 
@@ -421,7 +569,8 @@ const NewLoginScreen = () => {
 
                                     <TouchableOpacity style={styles.resendBtn} activeOpacity={0.7}>
                                         <Text style={styles.resendText}>
-                                            Didn't receive? <Text style={styles.resendLink}>Resend OTP</Text>
+                                            {t('didntReceive')}{' '}
+                                            <Text style={styles.resendLink}>{t('resendOtp')}</Text>
                                         </Text>
                                     </TouchableOpacity>
                                 </>
@@ -458,7 +607,9 @@ const NewLoginScreen = () => {
                                     onPress={() => setShowPassword(!showPassword)}
                                     activeOpacity={0.7}
                                 >
-                                    <Text style={styles.showHide}>{showPassword ? 'Hide' : 'Show'}</Text>
+                                    <Text style={styles.showHide}>
+                                        {showPassword ? t('hide') : t('show')}
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
 
@@ -485,7 +636,7 @@ const NewLoginScreen = () => {
                                 <Text style={styles.countryCode}>+91</Text>
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="Enter 10-digit mobile"
+                                    placeholder={t('enterMobile')}
                                     placeholderTextColor="#A7B4B6"
                                     keyboardType="number-pad"
                                     maxLength={10}
@@ -532,7 +683,7 @@ const NewLoginScreen = () => {
                     <View style={styles.divider}>
                         <View style={styles.dividerLine} />
                         <View style={styles.dividerPill}>
-                            <Text style={styles.dividerText}>or</Text>
+                            <Text style={styles.dividerText}>{t('or')}</Text>
                         </View>
                         <View style={styles.dividerLine} />
                     </View>
@@ -619,6 +770,65 @@ const NewLoginScreen = () => {
                     </View>
                 </TouchableOpacity>
             </Modal>
+
+            {/* =====================================================
+                DPDP CONSENT MODAL
+                ===================================================== */}
+            <Modal
+                visible={dpdpVisible}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setDpdpVisible(false)}
+            >
+                <View style={styles.dpdpBackdrop}>
+                    <View style={styles.dpdpSheet}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>{t('dpdpTitle')}</Text>
+                            <TouchableOpacity
+                                onPress={() => setDpdpVisible(false)}
+                                style={styles.modalCloseBtn}
+                                activeOpacity={0.7}
+                            >
+                                <Image
+                                    source={require('../../assets/close.png')}
+                                    style={{ height: 20, width: 20, tintColor: '#6B7A7C' }}
+                                    resizeMode="contain"
+                                />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView
+                            style={styles.dpdpScroll}
+                            showsVerticalScrollIndicator={false}
+                        >
+                            <Text style={styles.dpdpText}>{t('dpdpText')}</Text>
+                        </ScrollView>
+
+                        <Text style={styles.signatureLabel}>{t('yourSignature')}</Text>
+                        <SignaturePad
+                            onSignedChange={setIsDpdpSigned}
+                            placeholder={t('signHere')}
+                        />
+
+                        <TouchableOpacity
+                            style={[
+                                styles.dpdpAgreeBtn,
+                                !isDpdpSigned && styles.dpdpAgreeBtnDisabled,
+                            ]}
+                            onPress={handleDpdpAgree}
+                            disabled={!isDpdpSigned}
+                            activeOpacity={0.85}
+                        >
+                            <Text style={styles.dpdpAgreeText}>{t('agreeContinue')}</Text>
+                            <Image
+                                source={require('../../assets/arrow-forward.png')}
+                                style={{ height: 18, width: 18, tintColor: '#FFFFFF', marginLeft: 6 }}
+                                resizeMode="contain"
+                            />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </KeyboardAvoidingView>
     );
 };
@@ -633,7 +843,7 @@ const styles = StyleSheet.create({
         paddingBottom: 0,
     },
 
-    /* ============ HERO ============ */
+    /* HERO */
     hero: {
         height: 320,
         justifyContent: 'flex-end',
@@ -717,7 +927,7 @@ const styles = StyleSheet.create({
         marginTop: 6,
     },
 
-    /* ============ LANGUAGE BUTTON ============ */
+    /* LANGUAGE BUTTON */
     langBtn: {
         position: 'absolute',
         top: Platform.OS === 'ios' ? 58 : 44,
@@ -740,7 +950,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.3,
     },
 
-    /* ============ FORM CARD ============ */
+    /* FORM CARD */
     formCard: {
         flex: 1,
         backgroundColor: '#FFFFFF',
@@ -757,7 +967,7 @@ const styles = StyleSheet.create({
         elevation: 8,
     },
 
-    /* ============ TABS ============ */
+    /* TABS */
     tabBar: {
         flexDirection: 'row',
         backgroundColor: '#F2F9FA',
@@ -791,7 +1001,7 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
 
-    /* ============ LABELS & INPUTS ============ */
+    /* LABELS & INPUTS */
     label: {
         fontFamily: 'InstrumentSans-Bold',
         fontSize: 13,
@@ -844,7 +1054,7 @@ const styles = StyleSheet.create({
         marginLeft: 10,
     },
 
-    /* ============ OTP / MPIN BOXES ============ */
+    /* OTP / MPIN BOXES */
     otpRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -876,7 +1086,7 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
 
-    /* ============ BUTTONS ============ */
+    /* BUTTONS */
     primaryButton: {
         height: 56,
         borderRadius: 16,
@@ -934,7 +1144,7 @@ const styles = StyleSheet.create({
         color: '#047282',
     },
 
-    /* ============ DIVIDER ============ */
+    /* DIVIDER */
     divider: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -963,7 +1173,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.4,
     },
 
-    /* ============ SIGN UP ============ */
+    /* SIGN UP */
     signupRow: {
         flexDirection: 'row',
         justifyContent: 'center',
@@ -998,7 +1208,7 @@ const styles = StyleSheet.create({
         marginLeft: 4,
     },
 
-    /* ============ LANGUAGE MODAL ============ */
+    /* LANGUAGE MODAL */
     modalBackdrop: {
         flex: 1,
         backgroundColor: 'rgba(10,46,51,0.55)',
@@ -1094,6 +1304,95 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '700',
         color: '#FFFFFF',
+    },
+
+    /* ============ DPDP MODAL ============ */
+    dpdpBackdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(10,46,51,0.55)',
+        justifyContent: 'flex-end',
+    },
+    dpdpSheet: {
+        backgroundColor: '#FFFFFF',
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        paddingHorizontal: 24,
+        paddingTop: 20,
+        paddingBottom: Platform.OS === 'ios' ? 34 : 22,
+        maxHeight: '92%',
+    },
+    dpdpScroll: {
+        maxHeight: 220,
+        marginBottom: 14,
+    },
+    dpdpText: {
+        fontFamily: 'InstrumentSans-Regular',
+        fontSize: 13,
+        lineHeight: 21,
+        color: '#3A4B4E',
+    },
+    signatureLabel: {
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#0A2E33',
+        marginBottom: 8,
+    },
+    signatureBox: {
+        backgroundColor: '#F7FAFB',
+        borderRadius: 14,
+        borderWidth: 1.5,
+        borderColor: '#D4E9EC',
+        borderStyle: 'dashed',
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+        position: 'relative',
+    },
+    signaturePlaceholder: {
+        fontFamily: 'InstrumentSans-Regular',
+        fontSize: 13,
+        color: '#A7B4B6',
+    },
+    clearBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignSelf: 'flex-end',
+        marginTop: 8,
+        paddingVertical: 4,
+    },
+    clearBtnText: {
+        fontFamily: 'InstrumentSans-Regular',
+        fontSize: 12,
+        color: '#E63E6D',
+        marginLeft: 4,
+        fontWeight: '600',
+    },
+    dpdpAgreeBtn: {
+        flexDirection: 'row',
+        height: 54,
+        borderRadius: 14,
+        backgroundColor: '#FEA92F',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 16,
+        shadowColor: '#FEA92F',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        elevation: 6,
+    },
+    dpdpAgreeBtnDisabled: {
+        backgroundColor: '#F5D9A8',
+        shadowOpacity: 0,
+        elevation: 0,
+    },
+    dpdpAgreeText: {
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        letterSpacing: 0.2,
     },
 });
 

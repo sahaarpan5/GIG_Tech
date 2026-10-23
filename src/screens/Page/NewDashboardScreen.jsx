@@ -19,11 +19,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width: SCREEN_W } = Dimensions.get('window');
 
 const SL_DATA = {
-    name: 'Sector 18 Hub',
-    location: 'Sector 18, Noida, UP',
-    assignedDate: '12 Oct 2025',
-    startDate: '15 Oct 2025',
-    endDate: '14 Nov 2025',
+    name: 'MT',
+    location: 'Kolkata',
+    assignedDate: '01 Oct 2026',
+    startDate: '01 Oct 2026',
+    endDate: '31 Oct 2026',
 };
 
 const PROFILE = {
@@ -46,7 +46,7 @@ I understand that:
 
 By signing below, I acknowledge that I have read, understood, and agree to the above terms and conditions.`;
 
-const RATE_PER_UNIT = 100;
+const RATE_PER_UNIT = 95.8100;
 
 const LANGUAGES = [
     { key: 'English', label: 'English', native: 'English', code: 'EN' },
@@ -93,12 +93,14 @@ const TRANSLATIONS = {
         gpsAccuracy: 'GPS accuracy ± 5m',
 
         productName: 'Product Name',
-        value: 'Value',
+        value: 'Qty',
         enterQuantity: 'Enter quantity',
         rate: 'Rate',
         total: 'Total',
         units: 'unit(s)',
         save: 'Save',
+        activityDate: 'Activity Date',
+        today: 'Today',
     },
     Bengali: {
         greeting: 'সুপ্রভাত, Rahul 👋', subtitle: 'আজকের কাজের বিবরণ', chooseLanguage: 'ভাষা নির্বাচন করুন',
@@ -108,6 +110,8 @@ const TRANSLATIONS = {
         consentTitle: 'সম্মতি ও চুক্তি', yourSignature: 'আপনার স্বাক্ষর', signHere: 'এখানে আঙুল দিয়ে স্বাক্ষর করুন', clearSignature: 'স্বাক্ষর মুছে ফেলুন', saveContinue: 'সংরক্ষণ করুন ও এগিয়ে যান',
         activityDetails: 'কাজের বিবরণ লিখুন', selfieVerification: 'সেলফি যাচাইকরণ', takeSelfie: 'সেলফি তুলুন', selfieInstruction: 'আপনার মুখ স্পষ্টভাবে দেখা যাচ্ছে কিনা নিশ্চিত করুন', openCamera: 'ক্যামেরা খুলুন',
         currentLocation: 'বর্তমান অবস্থান', youAreHere: 'আপনি এখানে আছেন', gpsAccuracy: 'GPS নির্ভুলতা ± ৫ মিটার', productName: 'পণ্যের নাম', value: 'পরিমাণ', enterQuantity: 'পরিমাণ লিখুন', rate: 'দর', total: 'মোট', units: 'একক', save: 'সংরক্ষণ করুন',
+        activityDate: 'কার্যকলাপের তারিখ',
+        today: 'আজ',
     },
     Hindi: {
         greeting: 'सुप्रभात, Rahul 👋', subtitle: 'आज के काम का विवरण', chooseLanguage: 'भाषा चुनें',
@@ -117,6 +121,8 @@ const TRANSLATIONS = {
         consentTitle: 'सहमति और अनुबंध', yourSignature: 'आपके हस्ताक्षर', signHere: 'यहाँ उँगली से हस्ताक्षर करें', clearSignature: 'हस्ताक्षर मिटाएँ', saveContinue: 'सहेजें और आगे बढ़ें',
         activityDetails: 'कार्य का विवरण दर्ज करें', selfieVerification: 'सेल्फी सत्यापन', takeSelfie: 'सेल्फी लें', selfieInstruction: 'सुनिश्चित करें कि आपका चेहरा स्पष्ट दिखाई दे', openCamera: 'कैमरा खोलें',
         currentLocation: 'वर्तमान स्थान', youAreHere: 'आप यहाँ हैं', gpsAccuracy: 'GPS सटीकता ± 5 मीटर', productName: 'उत्पाद का नाम', value: 'मात्रा', enterQuantity: 'मात्रा दर्ज करें', rate: 'दर', total: 'कुल', units: 'इकाई', save: 'सहेजें',
+        activityDate: 'गतिविधि तिथि',
+        today: 'आज',
     },
 };
 
@@ -231,7 +237,7 @@ const NewDashboardScreen = () => {
     const signatureRef = useRef(null);
 
     const [quantity, setQuantity] = useState('');
-    const [productName] = useState('Premium Steel Rod');
+    const [productName] = useState('GIG deployment commissions on oshea Product Sale (PD0015)');
 
     const rate = quantity ? Number(quantity) * RATE_PER_UNIT : 0;
 
@@ -537,6 +543,34 @@ const NewDashboardScreen = () => {
                         </View>
 
                         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
+
+
+                            <Text style={styles.fieldLabel}>{t('activityDate')}</Text>
+                            <View style={styles.activityDateCard}>
+                                <View style={styles.activityDateIconBg}>
+                                    <Image
+                                        source={require('../../assets/calendar.png')}
+                                        style={{ height: 20, width: 20, tintColor: '#FFFFFF' }}
+                                        resizeMode="contain"
+                                    />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.activityDateLabel}>{t('today')}</Text>
+                                    <Text style={styles.activityDateValue}>
+                                        {new Date().toLocaleDateString('en-IN', {
+                                            day: '2-digit',
+                                            month: 'short',
+                                            year: 'numeric',
+                                        })}
+                                    </Text>
+                                    <View style={styles.activityDateMetaRow}>
+                                        <View style={styles.activityDateMetaDot} />
+                                        <Text style={styles.activityDateMeta}>
+                                            {new Date().toLocaleDateString('en-IN', { weekday: 'long' })}
+                                        </Text>
+                                    </View>
+                                </View>
+                            </View>
                             {/* Selfie */}
                             <Text style={styles.fieldLabel}>{t('selfieVerification')}</Text>
                             <View style={styles.selfieCard}>
@@ -574,7 +608,7 @@ const NewDashboardScreen = () => {
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.locationLabel}>{t('youAreHere')}</Text>
                                     <Text style={styles.locationAddress} numberOfLines={2}>
-                                        Sector 18, Noida, Uttar Pradesh 201301
+                                        BP Block Sector V, Bidhannagar, Kolkata, West Bengal 700091
                                     </Text>
                                     <View style={styles.locationMetaRow}>
                                         <View style={styles.locationMetaDot} />
@@ -600,7 +634,7 @@ const NewDashboardScreen = () => {
                             <View style={styles.inputRow}>
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="Enter Value"
+                                    placeholder="Enter Qty"
                                     placeholderTextColor="#A7B4B6"
                                     keyboardType="number-pad"
                                     value={quantity}
@@ -930,7 +964,7 @@ const styles = StyleSheet.create({
     locationMetaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 6 },
     locationMetaDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#22C55E', marginRight: 6 },
     locationMeta: { fontFamily: 'InstrumentSans-Regular', fontSize: 11, color: '#6B7A7C' },
-    productNameBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#EAF5F6', borderRadius: 12, paddingHorizontal: 14, height: 50 },
+    productNameBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#EAF5F6', borderRadius: 12, paddingHorizontal: 14, height: 70 },
     productNameText: { fontFamily: 'InstrumentSans-Bold', fontSize: 15, fontWeight: '700', color: '#047282', marginLeft: 10 },
     inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F7FAFB', borderRadius: 12, borderWidth: 1, borderColor: '#E4ECEE', paddingHorizontal: 14, height: 54 },
     inputRowDisabled: { backgroundColor: '#F2F5F6', borderColor: '#E4ECEE' },
@@ -1017,6 +1051,57 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#FFFFFF',
     },
+    /* Activity date card (product modal) */
+activityDateCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF4E5',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#FFD9A8',
+    alignItems: 'flex-start',
+},
+activityDateIconBg: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#F5A623',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+},
+activityDateLabel: {
+    fontFamily: 'InstrumentSans-Bold',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    color: '#F5A623',
+    textTransform: 'uppercase',
+},
+activityDateValue: {
+    fontFamily: 'InstrumentSans-Bold',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0A2E33',
+    marginTop: 4,
+},
+activityDateMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+},
+activityDateMetaDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#F5A623',
+    marginRight: 6,
+},
+activityDateMeta: {
+    fontFamily: 'InstrumentSans-Regular',
+    fontSize: 11,
+    color: '#6B7A7C',
+},
 });
 
 export default NewDashboardScreen;

@@ -8,7 +8,9 @@ import {
     FlatList,
     StatusBar,
     Platform,
-    Image
+    Image,
+    ScrollView,
+    Modal
 } from 'react-native';
 
 
@@ -24,6 +26,11 @@ const EARNINGS_PERIODS = [
         icon: require('../../assets/calendar.png'),
         iconBg: '#E4F9EC',
         iconColor: '#22A06B',
+        activitiesList: [
+            { date: '12 Oct 2025', product: 'GIG deployment commissions on oshea Product Sale', qty: 3, rate: 287.43 },
+            { date: '11 Oct 2025', product: 'GIG deployment commissions on oshea Product Sale', qty: 5, rate: 479.05 },
+            { date: '10 Oct 2025', product: 'GIG deployment commissions on oshea Product Sale', qty: 4, rate: 383.24 },
+        ],
     },
     {
         id: 'w2',
@@ -35,6 +42,11 @@ const EARNINGS_PERIODS = [
         icon: require('../../assets/calendar.png'),
         iconBg: '#E4F9EC',
         iconColor: '#22A06B',
+        activitiesList: [
+            { date: '12 Oct 2025', product: 'GIG deployment commissions on oshea Product Sale', qty: 3, rate: 287.43 },
+            { date: '11 Oct 2025', product: 'GIG deployment commissions on oshea Product Sale', qty: 5, rate: 479.05 },
+            { date: '10 Oct 2025', product: 'GIG deployment commissions on oshea Product Sale', qty: 4, rate: 383.24 },
+        ],
     },
     {
         id: 'w3',
@@ -46,6 +58,11 @@ const EARNINGS_PERIODS = [
         icon: require('../../assets/calendar.png'),
         iconBg: '#FFF4E5',
         iconColor: '#F5A623',
+        activitiesList: [
+            { date: '12 Oct 2025', product: 'GIG deployment commissions on oshea Product Sale', qty: 3, rate: 287.43 },
+            { date: '11 Oct 2025', product: 'GIG deployment commissions on oshea Product Sale', qty: 5, rate: 479.05 },
+            { date: '10 Oct 2025', product: 'GIG deployment commissions on oshea Product Sale', qty: 4, rate: 383.24 },
+        ],
     },
     {
         id: 'd15',
@@ -57,6 +74,11 @@ const EARNINGS_PERIODS = [
         icon: require('../../assets/calendar.png'),
         iconBg: '#E8F4FF',
         iconColor: '#2C7BE5',
+        activitiesList: [
+            { date: '12 Oct 2025', product: 'GIG deployment commissions on oshea Product Sale', qty: 3, rate: 287.43 },
+            { date: '11 Oct 2025', product: 'GIG deployment commissions on oshea Product Sale', qty: 5, rate: 479.05 },
+            { date: '10 Oct 2025', product: 'GIG deployment commissions on oshea Product Sale', qty: 4, rate: 383.24 },
+        ],
     },
     {
         id: 'm1',
@@ -68,6 +90,11 @@ const EARNINGS_PERIODS = [
         icon: require('../../assets/calendar.png'),
         iconBg: '#F0EDFF',
         iconColor: '#7B5CFF',
+        activitiesList: [
+            { date: '12 Oct 2025', product: 'GIG deployment commissions on oshea Product Sale', qty: 3, rate: 287.43 },
+            { date: '11 Oct 2025', product: 'GIG deployment commissions on oshea Product Sale', qty: 5, rate: 479.05 },
+            { date: '10 Oct 2025', product: 'GIG deployment commissions on oshea Product Sale', qty: 4, rate: 383.24 },
+        ],
     },
 ];
 
@@ -88,6 +115,12 @@ const EARNINGS_TRANSLATIONS = {
         week3: 'Week 3',
         fifteenDays: '15 Days',
         monthly: 'Monthly',
+        detailTitle: 'Activity Details',
+        activityDate: 'Activity Date',
+        productNameLabel: 'Product Name',
+        qtyLabel: 'Quantity',
+        rateLabel: 'Rate',
+        close: 'Close',
     },
     Hindi: {
         title: 'मेरी कमाई',
@@ -103,6 +136,12 @@ const EARNINGS_TRANSLATIONS = {
         week3: 'सप्ताह 3',
         fifteenDays: '15 दिन',
         monthly: 'मासिक',
+        detailTitle: 'गतिविधि विवरण',
+        activityDate: 'गतिविधि तिथि',
+        productNameLabel: 'उत्पाद का नाम',
+        qtyLabel: 'मात्रा',
+        rateLabel: 'दर',
+        close: 'बंद करें',
     },
     Bengali: {
         title: 'আমার উপার্জন',
@@ -118,6 +157,12 @@ const EARNINGS_TRANSLATIONS = {
         week3: 'তৃতীয় সপ্তাহ',
         fifteenDays: '১৫ দিন',
         monthly: 'মাসিক',
+        detailTitle: 'কার্যক্রমের বিবরণ',
+        activityDate: 'কার্যক্রমের তারিখ',
+        productNameLabel: 'পণ্যের নাম',
+        qtyLabel: 'পরিমাণ',
+        rateLabel: 'দর',
+        close: 'বন্ধ করুন',
     },
 };
 
@@ -131,6 +176,9 @@ const MyEarningsScreen = ({ navigation }) => {
         EARNINGS_TRANSLATIONS[selectedLanguage]?.[key] ??
         EARNINGS_TRANSLATIONS.English[key] ??
         key;
+
+    const [detailModalVisible, setDetailModalVisible] = useState(false);
+    const [selectedPeriod, setSelectedPeriod] = useState(null);
 
     useEffect(() => {
         const loadLanguage = async () => {
@@ -149,10 +197,23 @@ const MyEarningsScreen = ({ navigation }) => {
     }, []);
 
 
+    const truncateWords = (str, count) => {
+        if (!str) return '';
+        const words = str.trim().split(/\s+/);
+        if (words.length <= count) return str;
+        return words.slice(0, count).join(' ') + '...';
+    };
+
+
 
     /* ---------- Card renderer ---------- */
     const renderItem = ({ item }) => (
-        <View style={styles.card}>
+        <TouchableOpacity style={styles.card}
+            activeOpacity={0.85}
+            onPress={() => {
+                setSelectedPeriod(item);
+                setDetailModalVisible(true);
+            }}>
             <View style={styles.cardHeaderRow}>
                 <View style={styles.cardHeaderLeft}>
                     <View style={[styles.cardIconChip, { backgroundColor: item.iconBg }]}>
@@ -218,7 +279,7 @@ const MyEarningsScreen = ({ navigation }) => {
 
                 <Text style={styles.cardAmount}>₹ {item.amount.toLocaleString()}</Text>
             </View>
-        </View>
+        </TouchableOpacity>
     );
 
     return (
@@ -295,6 +356,114 @@ const MyEarningsScreen = ({ navigation }) => {
                     </View>
                 }
             />
+
+            {/* =====================================================
+    ACTIVITY DETAIL MODAL
+    ===================================================== */}
+            <Modal
+                visible={detailModalVisible}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setDetailModalVisible(false)}
+            >
+                <View style={styles.modalBackdrop}>
+                    <View style={styles.modalSheet}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>{t('detailTitle')}</Text>
+                            <TouchableOpacity
+                                onPress={() => setDetailModalVisible(false)}
+                                style={styles.modalCloseBtn}
+                                activeOpacity={0.7}
+                            >
+                                <Image
+                                    source={require('../../assets/close.png')}
+                                    style={{ height: 20, width: 20, tintColor: '#6B7A7C' }}
+                                    resizeMode="contain"
+                                />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Period header */}
+                        {selectedPeriod && (
+                            <View style={styles.periodBadge}>
+                                <View style={styles.periodBadgeLeft}>
+                                    <Image
+                                        source={selectedPeriod.icon}
+                                        style={{
+                                            width: 14,
+                                            height: 14,
+                                            tintColor: selectedPeriod.iconColor,
+                                            marginRight: 6,
+                                        }}
+                                        resizeMode="contain"
+                                    />
+                                    <Text style={styles.periodBadgeLabel}>
+                                        {selectedPeriod.label}
+                                    </Text>
+                                </View>
+                                <Text style={styles.periodBadgeRange}>
+                                    {selectedPeriod.range}
+                                </Text>
+                            </View>
+                        )}
+
+                        {/* Activities list */}
+                        <ScrollView
+                            style={styles.modalScroll}
+                            showsVerticalScrollIndicator={false}
+                        >
+                            {selectedPeriod?.activitiesList?.map((activity, index) => (
+                                <View key={index} style={styles.detailCard}>
+                                    {/* Date row */}
+                                    <View style={styles.detailDateRow}>
+                                        <View style={styles.detailDateChip}>
+                                            <Image
+                                                source={require('../../assets/calendar.png')}
+                                                style={{ width: 12, height: 12, tintColor: '#F5A623' }}
+                                                resizeMode="contain"
+                                            />
+                                        </View>
+                                        <Text style={styles.detailDateLabel}>{t('activityDate')}</Text>
+                                        <Text style={styles.detailDateValue}>{activity.date}</Text>
+                                    </View>
+
+                                    <View style={styles.detailDivider} />
+
+                                    {/* Product */}
+                                    <View style={styles.detailRow}>
+                                        <Text style={styles.detailLabel}>{t('productNameLabel')}</Text>
+                                        <Text style={styles.detailValue} numberOfLines={1}>
+                                            {truncateWords(activity.product, 2)}
+                                        </Text>
+                                    </View>
+
+                                    {/* Qty */}
+                                    <View style={styles.detailRow}>
+                                        <Text style={styles.detailLabel}>{t('qtyLabel')}</Text>
+                                        <Text style={styles.detailValue}>{activity.qty} unit(s)</Text>
+                                    </View>
+
+                                    {/* Rate */}
+                                    <View style={styles.detailRow}>
+                                        <Text style={styles.detailLabel}>{t('rateLabel')}</Text>
+                                        <Text style={[styles.detailValue, styles.detailRate]}>
+                                            ₹ {activity.rate.toFixed(2)}
+                                        </Text>
+                                    </View>
+                                </View>
+                            ))}
+                        </ScrollView>
+
+                        <TouchableOpacity
+                            style={styles.modalCloseFullBtn}
+                            onPress={() => setDetailModalVisible(false)}
+                            activeOpacity={0.85}
+                        >
+                            <Text style={styles.modalCloseFullBtnText}>{t('close')}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
@@ -449,6 +618,158 @@ const styles = StyleSheet.create({
     emptySubtitle: {
         fontFamily: 'InstrumentSans-Regular', fontSize: 13,
         color: '#8A9698', marginTop: 6, textAlign: 'center',
+    },
+
+    modalBackdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(10,46,51,0.55)',
+        justifyContent: 'flex-end',
+    },
+    modalSheet: {
+        backgroundColor: '#FFFFFF',
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        paddingHorizontal: 24,
+        paddingTop: 20,
+        paddingBottom: Platform.OS === 'ios' ? 34 : 22,
+        maxHeight: '88%',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 16,
+    },
+    modalTitle: {
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 19,
+        fontWeight: '700',
+        color: '#0A2E33',
+        letterSpacing: -0.2,
+        flex: 1,
+        marginRight: 10,
+    },
+    modalCloseBtn: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#F2F9FA',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    periodBadge: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#EAF5F6',
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        marginBottom: 14,
+        borderWidth: 1,
+        borderColor: '#D4E9EC',
+    },
+    periodBadgeLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    periodBadgeLabel: {
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#047282',
+    },
+    periodBadgeRange: {
+        fontFamily: 'InstrumentSans-Regular',
+        fontSize: 12,
+        color: '#6B7A7C',
+    },
+    modalScroll: {
+        maxHeight: 380,
+    },
+    detailCard: {
+        backgroundColor: '#F7FAFB',
+        borderRadius: 14,
+        padding: 14,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#E4ECEE',
+    },
+    detailDateRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    detailDateChip: {
+        width: 24,
+        height: 24,
+        borderRadius: 8,
+        backgroundColor: '#FFF4E5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 8,
+    },
+    detailDateLabel: {
+        fontFamily: 'InstrumentSans-Regular',
+        fontSize: 12,
+        color: '#6B7A7C',
+        flex: 1,
+    },
+    detailDateValue: {
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#0A2E33',
+    },
+    detailDivider: {
+        height: 1,
+        backgroundColor: '#E4ECEE',
+        marginBottom: 10,
+    },
+    detailRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 6,
+    },
+    detailLabel: {
+        fontFamily: 'InstrumentSans-Regular',
+        fontSize: 13,
+        color: '#6B7A7C',
+        flex: 1,
+    },
+    detailValue: {
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#0A2E33',
+        textAlign: 'right',
+        flexShrink: 1,
+        marginLeft: 12,
+    },
+    detailRate: {
+        color: '#047282',
+        fontSize: 14,
+    },
+    modalCloseFullBtn: {
+        height: 52,
+        borderRadius: 14,
+        backgroundColor: '#047282',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 14,
+        shadowColor: '#047282',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        elevation: 6,
+    },
+    modalCloseFullBtnText: {
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        letterSpacing: 0.2,
     },
 });
 
