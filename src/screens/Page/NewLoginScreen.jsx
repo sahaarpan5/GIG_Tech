@@ -16,7 +16,12 @@ import {
     Image,
     Modal,
     PanResponder,
+    ActivityIndicator,
 } from 'react-native';
+import { captureRef } from 'react-native-view-shot';
+
+import axios from 'axios';
+import API from '../../util/API';
 
 const HERO_IMAGE =
     'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&q=80&auto=format&fit=crop';
@@ -24,7 +29,7 @@ const HERO_IMAGE =
 const TABS = [
     { key: 'otp', translationKey: 'otp' },
     { key: 'password', translationKey: 'passwordTab' },
-    { key: 'mpin', translationKey: 'mpinTab' },
+    // { key: 'mpin', translationKey: 'mpinTab' },
 ];
 
 const LANGUAGES = [
@@ -213,10 +218,12 @@ By signing below, I acknowledge that I have read the above consent and agree to 
 /* =====================================================
    SIGNATURE PAD
    ===================================================== */
-const SignaturePad = ({ onSignedChange, placeholder }) => {
+const SignaturePad = ({ onSignedChange, placeholder, signatureRef }) => {
     const [paths, setPaths] = useState([]);
     const currentPath = useRef([]);
     const padHeight = 160;
+
+
 
     const panResponder = useRef(
         PanResponder.create({
@@ -251,6 +258,8 @@ const SignaturePad = ({ onSignedChange, placeholder }) => {
     return (
         <View>
             <View
+                ref={signatureRef}
+                collapsable={false}
                 style={[styles.signatureBox, { height: padHeight }]}
                 {...panResponder.panHandlers}
             >
@@ -302,11 +311,21 @@ const SignaturePad = ({ onSignedChange, placeholder }) => {
 const NewLoginScreen = () => {
     const navigation = useNavigation();
     const [activeTab, setActiveTab] = useState('otp');
+    const [otpLoading, setOtpLoading] = useState(false);
+
+    const [consentContent, setConsentContent] = useState('');
+    const [consentAccepted, setConsentAccepted] = useState(0);
+
+    const [otpVerifyLoading, setOtpVerifyLoading] = useState(false);
+    const [passwordLoading, setPasswordLoading] = useState(false);
+
+    const signatureRef = useRef(null);
+    const [consentLoading, setConsentLoading] = useState(false);
 
     // OTP state
     const [mobile, setMobile] = useState('');
     const [otpSent, setOtpSent] = useState(false);
-    const [otp, setOtp] = useState(['', '', '', '', '', '']);
+    const [otp, setOtp] = useState(['', '', '', '']);
     const otpRefs = useRef([]);
 
     // Password state
@@ -356,19 +375,75 @@ const NewLoginScreen = () => {
         setLanguageModalVisible(false);
     };
 
-    const handleSendOtp = () => {
+    const handleSendOtp = async () => {
         if (mobile.length !== 10) {
             Alert.alert(t('invalidNumber'), t('validMobile'));
             return;
         }
-        setOtpSent(true);
+
+
+
+        setOtpLoading(true);
+
+        try {
+            const payload = {
+                Type: 1,
+                Op: 1,
+                Mobile: mobile,
+                OTP: '',
+                username: '',
+                password: '',
+                macaddress: '',
+                ipaddress: '',
+                lat: '',
+                Long: '',
+            };
+
+            const response = await axios.post(
+                API.OTP_GENERATE,
+                payload,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 30000,
+                }
+            );
+
+            console.log('OTP Generate Response:', response.data);
+
+            if (response.data?.Data?.Status === 1) {
+                setOtpSent(true);
+                setOtp(['', '', '', '']);
+
+                Alert.alert(
+                    'Success',
+                    response.data?.Data?.OTP || 'OTP generated successfully'
+                );
+            } else {
+                Alert.alert(
+                    'Failed',
+                    response.data?.Message || 'Unable to generate OTP'
+                );
+            }
+
+        } catch (error) {
+            console.log('OTP API Error:', error.response?.data || error.message);
+
+            Alert.alert(
+                'Error',
+                error.response?.data?.Message || 'Something went wrong. Please try again.'
+            );
+        } finally {
+            setOtpLoading(false);
+        }
     };
 
     const handleOtpChange = (value, index) => {
         const next = [...otp];
         next[index] = value.replace(/[^0-9]/g, '');
         setOtp(next);
-        if (value && index < 5) otpRefs.current[index + 1]?.focus();
+        if (value && index < 3) otpRefs.current[index + 1]?.focus();
     };
 
     const handleOtpKeyPress = (e, index) => {
@@ -396,23 +471,215 @@ const NewLoginScreen = () => {
         setDpdpVisible(true);
     };
 
-    const handleOtpLogin = () => {
-        if (otp.join('').length !== 6) {
-            Alert.alert(t('invalidOtp'), t('enterSixDigitOtp'));
+
+    const handleOtpLogin = async () => {
+        const enteredOtp = otp.join('');
+
+        if (enteredOtp.length !== 4) {
+            Alert.alert(
+                t('invalidOtp'),
+                'Please enter the 4-digit OTP.'
+            );
             return;
         }
-        console.log('OTP login:', mobile, otp.join(''));
-        openDpdpConsent();
+
+        if (otpVerifyLoading) return;
+
+        setOtpVerifyLoading(true);
+
+        try {
+            const payload = {
+                Type: 1,
+                Op: 1,
+                Mobile: mobile,
+                OTP: enteredOtp,
+                username: '',
+                password: '',
+                macaddress: '',
+                ipaddress: '',
+                lat: '',
+                Long: '',
+            };
+
+            const response = await axios.post(
+                API.GIG_OTP_LOGIN,
+                payload,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 30000,
+                }
+            );
+
+            console.log('Gig Login Response:', response.data);
+
+            if (
+                response.data?.Status === true &&
+                response.data?.Data?.Status === true
+            ) {
+                const loginData = response.data.Data;
+                const userData = loginData.UserData || {};
+
+                setConsentContent(userData.ConsentContent || '');
+                setConsentAccepted(Number(userData.Concent_Accepted ?? 0));
+
+                // Save consent details
+                await AsyncStorage.multiSet([
+                    ['consentContent', userData.ConsentContent || ''],
+                    ['consentAccepted', String(userData.Concent_Accepted ?? 0)],
+                ]);
+
+                // Save login details in AsyncStorage
+                await AsyncStorage.multiSet([
+                    ['accessToken', loginData.AccessToken || ''],
+                    ['tokenExpiryTime', loginData.TokenExpiryTime || ''],
+                    ['userData', JSON.stringify(userData)],
+                    ['workerId', String(userData.WorkerId ?? '')],
+                    ['workerName', userData.WorkerName || ''],
+                    ['workerPayrollCode', userData.Worker_PayrollCode || ''],
+                    ['mobileNo', userData.MobileNo || ''],
+                    ['consentContent', userData.ConsentContent || ''],
+                    ['consentCode', userData.ConsentCode || ''],
+                    ['consentId', String(userData.ConsentId ?? '')],
+                    ['consentAccepted', String(userData.Concent_Accepted ?? 0)],
+                ]);
+
+                console.log('Login details saved successfully');
+
+                // Open DPDP consent if not already accepted
+                if (Number(userData.Concent_Accepted) === 0) {
+                 //  openDpdpConsent();
+                 navigation.replace('NewDashboardScreen');
+                } else {
+                    navigation.replace('NewDashboardScreen');
+                }
+
+            } else {
+                Alert.alert(
+                    'Login Failed',
+                    response.data?.Message ||
+                    response.data?.Data?.Message ||
+                    'Invalid OTP. Please try again.'
+                );
+            }
+
+        } catch (error) {
+            console.log(
+                'Gig Login API Error:',
+                error.response?.data || error.message
+            );
+
+            Alert.alert(
+                'Error',
+                error.response?.data?.Message ||
+                'Unable to verify OTP. Please try again.'
+            );
+
+        } finally {
+            setOtpVerifyLoading(false);
+        }
     };
 
-    const handlePasswordLogin = () => {
-        if (!userId || !password) {
+
+
+    const handlePasswordLogin = async () => {
+        if (!userId.trim() || !password) {
             Alert.alert(t('missingFields'), t('enterCredentials'));
             return;
         }
-        console.log('Password login:', userId, password);
-        openDpdpConsent();
+
+        if (passwordLoading) return;
+
+        setPasswordLoading(true);
+
+        try {
+            const payload = {
+                Type: 2,
+                Op: 1,
+                Mobile: '',
+                OTP: '',
+                username: userId.trim(),
+                password: password,
+                macaddress: '',
+                ipaddress: '',
+                lat: '',
+                Long: '',
+            };
+
+            const response = await axios.post(
+                API.GIG_OTP_LOGIN,
+                payload,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 30000,
+                }
+            );
+
+            console.log('Password Login Response:', response.data);
+
+            if (
+                response.data?.Status === true &&
+                response.data?.Data?.Status === true
+            ) {
+                const loginData = response.data.Data;
+                const userData = loginData.UserData || {};
+
+                // Save login details
+                await AsyncStorage.multiSet([
+                    ['accessToken', loginData.AccessToken || ''],
+                    ['tokenExpiryTime', loginData.TokenExpiryTime || ''],
+                    ['userData', JSON.stringify(userData)],
+                    ['workerId', String(userData.WorkerId ?? '')],
+                    ['workerName', userData.WorkerName || ''],
+                    ['workerPayrollCode', userData.Worker_PayrollCode || ''],
+                    ['mobileNo', userData.MobileNo || ''],
+                    ['consentContent', userData.ConsentContent || ''],
+                    ['consentCode', userData.ConsentCode || ''],
+                    ['consentId', String(userData.ConsentId ?? '')],
+                    ['consentAccepted', String(userData.Concent_Accepted ?? 0)],
+                ]);
+
+                // Set dynamic DPDP content
+                setConsentContent(userData.ConsentContent || '');
+                setConsentAccepted(Number(userData.Concent_Accepted ?? 0));
+
+                // Check consent status
+                if (Number(userData.Concent_Accepted) === 0) {
+                    setIsDpdpSigned(false);
+                    setDpdpVisible(true);
+                } else {
+                    navigation.replace('NewDashboardScreen');
+                }
+
+            } else {
+                Alert.alert(
+                    'Login Failed',
+                    response.data?.Message ||
+                    response.data?.Data?.Message ||
+                    'Invalid user ID or password.'
+                );
+            }
+
+        } catch (error) {
+            console.log(
+                'Password Login API Error:',
+                error.response?.data || error.message
+            );
+
+            Alert.alert(
+                'Error',
+                error.response?.data?.Message ||
+                'Unable to login. Please try again.'
+            );
+
+        } finally {
+            setPasswordLoading(false);
+        }
     };
+
 
     const handleMpinLogin = () => {
         if (mpinMobile.length !== 10 || mpin.join('').length !== 4) {
@@ -423,11 +690,118 @@ const NewLoginScreen = () => {
         openDpdpConsent();
     };
 
-    const handleDpdpAgree = () => {
-        if (!isDpdpSigned) return;
-        setDpdpVisible(false);
-        navigation.replace('NewDashboardScreen');
+
+    const handleDpdpAgree = async () => {
+        if (!isDpdpSigned) {
+            Alert.alert('Signature Required', 'Please provide your signature.');
+            return;
+        }
+
+        if (consentLoading) return;
+
+        setConsentLoading(true);
+
+        try {
+            // Capture signature as Base64 PNG
+            const signatureBase64 = await captureRef(
+                signatureRef.current,
+                {
+                    format: 'png',
+                    quality: 1,
+                    result: 'base64',
+                }
+            );
+
+            // Get saved login details
+            const token = await AsyncStorage.getItem('accessToken');
+
+            const userDataString = await AsyncStorage.getItem('userData');
+            const userData = userDataString
+                ? JSON.parse(userDataString)
+                : {};
+
+            if (!token) {
+                throw new Error('Authentication token not found. Please login again.');
+            }
+
+            if (!signatureBase64) {
+                throw new Error('Unable to capture signature. Please sign again.');
+            }
+
+            // Consent API payload
+            const payload = {
+                Op: 2,
+                Worker_PayrollCode: userData.Worker_PayrollCode,
+                ConsentId: userData.ConsentId,
+                ConsentSignature: signatureBase64,
+            };
+
+            console.log('Consent Payload:', {
+                ...payload,
+                ConsentSignature: 'Base64 signature captured',
+            });
+
+            const response = await axios.post(
+                API.CONSENT,
+                payload,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    timeout: 30000,
+                }
+            );
+
+            console.log('Consent API Response:', response.data);
+
+            if (
+                response.data?.Status === true ||
+                response.data?.Data?.Status === true
+            ) {
+                // Update consent status only after API success
+                await AsyncStorage.setItem('consentAccepted', '1');
+
+                const updatedUserData = {
+                    ...userData,
+                    Concent_Accepted: 1,
+                };
+
+                await AsyncStorage.setItem(
+                    'userData',
+                    JSON.stringify(updatedUserData)
+                );
+
+                setConsentAccepted(1);
+                setDpdpVisible(false);
+
+                navigation.replace('NewDashboardScreen');
+
+            } else {
+                Alert.alert(
+                    'Consent Failed',
+                    response.data?.Message || 'Unable to submit consent.'
+                );
+            }
+
+        } catch (error) {
+            console.log(
+                'Consent API Error:',
+                error.response?.data || error.message
+            );
+
+            Alert.alert(
+                'Error',
+                error.response?.data?.Message ||
+                error.message ||
+                'Unable to submit consent. Please try again.'
+            );
+
+        } finally {
+            setConsentLoading(false);
+        }
     };
+
 
     return (
         <KeyboardAvoidingView
@@ -527,8 +901,20 @@ const NewLoginScreen = () => {
                                     onPress={handleSendOtp}
                                     activeOpacity={0.85}
                                 >
-                                    <View style={styles.primaryButtonGlow} />
-                                    <Text style={styles.primaryButtonText}>{t('sendOtp')}</Text>
+
+                                    {otpLoading ? (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <ActivityIndicator size="small" color="#FFFFFF" />
+                                            <Text style={[styles.primaryButtonText, { marginLeft: 10 }]}>
+                                                Sending OTP...
+                                            </Text>
+                                        </View>
+                                    ) : (
+                                        <>
+                                            <View style={styles.primaryButtonGlow} />
+                                            <Text style={styles.primaryButtonText}>{t('sendOtp')}</Text>
+                                        </>
+                                    )}
                                 </TouchableOpacity>
                             ) : (
                                 <>
@@ -537,7 +923,7 @@ const NewLoginScreen = () => {
                                         Sent to +91 {mobile}{' '}
                                         <Text
                                             style={styles.changeLink}
-                                            onPress={() => { setOtpSent(false); setOtp(['', '', '', '', '', '']); }}
+                                            onPress={() => { setOtpSent(false); setOtp(['', '', '', '']); }}
                                         >
                                             {t('change')}
                                         </Text>
@@ -563,11 +949,23 @@ const NewLoginScreen = () => {
                                         onPress={handleOtpLogin}
                                         activeOpacity={0.85}
                                     >
-                                        <View style={styles.primaryButtonGlow} />
-                                        <Text style={styles.primaryButtonText}>{t('verifyLogin')}</Text>
+
+                                        {otpVerifyLoading ? (
+                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                <ActivityIndicator size="small" color="#FFFFFF" />
+                                                <Text style={[styles.primaryButtonText, { marginLeft: 10 }]}>
+                                                    Verifying...
+                                                </Text>
+                                            </View>
+                                        ) : (
+                                            <>
+                                                <View style={styles.primaryButtonGlow} />
+                                                <Text style={styles.primaryButtonText}>{t('verifyLogin')}</Text>
+                                            </>
+                                        )}
                                     </TouchableOpacity>
 
-                                    <TouchableOpacity style={styles.resendBtn} activeOpacity={0.7}>
+                                    <TouchableOpacity style={styles.resendBtn} activeOpacity={0.7} onPress={handleSendOtp}>
                                         <Text style={styles.resendText}>
                                             {t('didntReceive')}{' '}
                                             <Text style={styles.resendLink}>{t('resendOtp')}</Text>
@@ -622,8 +1020,21 @@ const NewLoginScreen = () => {
                                 onPress={handlePasswordLogin}
                                 activeOpacity={0.85}
                             >
-                                <View style={styles.primaryButtonGlow} />
-                                <Text style={styles.primaryButtonText}>{t('login')}</Text>
+
+                                {passwordLoading ? (
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <ActivityIndicator size="small" color="#FFFFFF" />
+                                        <Text style={[styles.primaryButtonText, { marginLeft: 10 }]}>
+                                            Logging in...
+                                        </Text>
+                                    </View>
+                                ) : (
+                                    <>
+                                        <View style={styles.primaryButtonGlow} />
+                                        <Text style={styles.primaryButtonText}>{t('login')}</Text>
+
+                                    </>
+                                )}
                             </TouchableOpacity>
                         </View>
                     )}
@@ -801,11 +1212,12 @@ const NewLoginScreen = () => {
                             style={styles.dpdpScroll}
                             showsVerticalScrollIndicator={false}
                         >
-                            <Text style={styles.dpdpText}>{t('dpdpText')}</Text>
+                            <Text style={styles.dpdpText}>{consentContent}</Text>
                         </ScrollView>
 
                         <Text style={styles.signatureLabel}>{t('yourSignature')}</Text>
                         <SignaturePad
+                            signatureRef={signatureRef}
                             onSignedChange={setIsDpdpSigned}
                             placeholder={t('signHere')}
                         />
@@ -819,12 +1231,24 @@ const NewLoginScreen = () => {
                             disabled={!isDpdpSigned}
                             activeOpacity={0.85}
                         >
-                            <Text style={styles.dpdpAgreeText}>{t('agreeContinue')}</Text>
-                            <Image
-                                source={require('../../assets/arrow-forward.png')}
-                                style={{ height: 18, width: 18, tintColor: '#FFFFFF', marginLeft: 6 }}
-                                resizeMode="contain"
-                            />
+
+                            {consentLoading ? (
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <ActivityIndicator color="#FFFFFF" size="small" />
+                                    <Text style={[styles.dpdpAgreeText, { marginLeft: 10 }]}>
+                                        Submitting...
+                                    </Text>
+                                </View>
+                            ) : (
+                                <>
+                                    <Text style={styles.dpdpAgreeText}>{t('agreeContinue')}</Text>
+                                    <Image
+                                        source={require('../../assets/arrow-forward.png')}
+                                        style={{ height: 18, width: 18, tintColor: '#FFFFFF', marginLeft: 6 }}
+                                        resizeMode="contain"
+                                    />
+                                </>
+                            )}
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -1061,7 +1485,7 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     otpBox: {
-        width: 48,
+        width: 58,
         height: 56,
         borderRadius: 14,
         backgroundColor: '#F7FAFB',

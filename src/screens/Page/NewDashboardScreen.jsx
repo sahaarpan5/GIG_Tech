@@ -13,18 +13,16 @@ import {
     PanResponder,
     Dimensions,
     Image,
+    ActivityIndicator,
+    Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import API from '../../util/API';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
-const SL_DATA = {
-    name: 'MT',
-    location: 'Kolkata',
-    assignedDate: '01 Oct 2026',
-    startDate: '01 Oct 2026',
-    endDate: '31 Oct 2026',
-};
+
 
 const PROFILE = {
     percent: 60,
@@ -101,6 +99,7 @@ const TRANSLATIONS = {
         save: 'Save',
         activityDate: 'Activity Date',
         today: 'Today',
+        positionName: 'Position Name',
     },
     Bengali: {
         greeting: 'সুপ্রভাত, Rahul 👋', subtitle: 'আজকের কাজের বিবরণ', chooseLanguage: 'ভাষা নির্বাচন করুন',
@@ -112,6 +111,7 @@ const TRANSLATIONS = {
         currentLocation: 'বর্তমান অবস্থান', youAreHere: 'আপনি এখানে আছেন', gpsAccuracy: 'GPS নির্ভুলতা ± ৫ মিটার', productName: 'পণ্যের নাম', value: 'পরিমাণ', enterQuantity: 'পরিমাণ লিখুন', rate: 'দর', total: 'মোট', units: 'একক', save: 'সংরক্ষণ করুন',
         activityDate: 'কার্যকলাপের তারিখ',
         today: 'আজ',
+        positionName: 'পদের নাম',
     },
     Hindi: {
         greeting: 'सुप्रभात, Rahul 👋', subtitle: 'आज के काम का विवरण', chooseLanguage: 'भाषा चुनें',
@@ -123,6 +123,7 @@ const TRANSLATIONS = {
         currentLocation: 'वर्तमान स्थान', youAreHere: 'आप यहाँ हैं', gpsAccuracy: 'GPS सटीकता ± 5 मीटर', productName: 'उत्पाद का नाम', value: 'मात्रा', enterQuantity: 'मात्रा दर्ज करें', rate: 'दर', total: 'कुल', units: 'इकाई', save: 'सहेजें',
         activityDate: 'गतिविधि तिथि',
         today: 'आज',
+        positionName: 'पद का नाम',
     },
 };
 
@@ -237,6 +238,16 @@ const NewDashboardScreen = () => {
     const signatureRef = useRef(null);
 
     const [quantity, setQuantity] = useState('');
+
+    const [slData, setSlData] = useState({
+        name: '',
+        location: '',
+        positionName: '',
+        startDate: '',
+        endDate: '',
+    });
+
+    const [slLoading, setSlLoading] = useState(false);
     const [productName] = useState('GIG deployment commissions on oshea Product Sale (PD0015)');
 
     const rate = quantity ? Number(quantity) * RATE_PER_UNIT : 0;
@@ -279,6 +290,92 @@ const NewDashboardScreen = () => {
 
         loadSavedLanguage();
     }, []);
+
+    useEffect(() => {
+        fetchSLDetails();
+    }, []);
+
+
+
+
+    const formatSLDate = (dateString) => {
+        if (!dateString) return '';
+
+        const date = new Date(dateString);
+
+        if (Number.isNaN(date.getTime())) return '';
+
+        return date.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+        });
+    };
+
+    const fetchSLDetails = async () => {
+        setSlLoading(true);
+
+        try {
+            const token = await AsyncStorage.getItem('accessToken');
+            const payrollCode = await AsyncStorage.getItem('workerPayrollCode');
+
+            if (!token || !payrollCode) {
+                Alert.alert('Error', 'Login details not found. Please login again.');
+                return;
+            }
+
+            const payload = {
+                Op: 1,
+                Worker_PayrollCode: payrollCode,
+            };
+
+            const response = await axios.post(
+                API.GIG_VIEW,
+                payload,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    timeout: 30000,
+                }
+            );
+
+            console.log('SL View Response:', response.data);
+
+            if (response.data?.Status === true && response.data?.Data) {
+                const data = response.data.Data;
+
+                setSlData({
+                    name: data.ClientName || '',
+                    location: data.ClientOfficeName || '',
+                    positionName: data.PositionName || '',
+                    startDate: formatSLDate(data.StartDate),
+                    endDate: formatSLDate(data.EndDate),
+                });
+            } else {
+                Alert.alert(
+                    'Failed',
+                    response.data?.Message || 'Unable to fetch SL details.'
+                );
+            }
+
+        } catch (error) {
+            console.log(
+                'SL View API Error:',
+                error.response?.data || error.message
+            );
+
+            Alert.alert(
+                'Error',
+                error.response?.data?.Message || 'Unable to fetch SL details.'
+            );
+
+        } finally {
+            setSlLoading(false);
+        }
+    };
+
 
     return (
         <View style={styles.container}>
@@ -325,6 +422,22 @@ const NewDashboardScreen = () => {
 
                 {/* ============ SL CARD ============ */}
                 <View style={styles.slCard}>
+
+                    {slLoading && (
+                        <View style={{
+                            paddingVertical: 20,
+                            alignItems: 'center',
+                        }}>
+                            <ActivityIndicator size="large" color="#047282" />
+                            <Text style={{
+                                marginTop: 8,
+                                color: '#6B7A7C',
+                                fontSize: 12,
+                            }}>
+                                Loading SL details...
+                            </Text>
+                        </View>
+                    )}
                     <View style={styles.statusPill}>
                         <View style={styles.statusDot} />
                         <Text style={styles.statusText}>{t('activeSL')}</Text>
@@ -341,17 +454,45 @@ const NewDashboardScreen = () => {
                             />
                         </View>
                         <View style={styles.slHeaderTextWrap}>
-                            <Text style={styles.slName}>{SL_DATA.name}</Text>
-                            <Text style={styles.slLocation}>{SL_DATA.location}</Text>
+                            <Text style={styles.slName}> {slData.name || '-'}</Text>
+                            <Text style={styles.slLocation}>{slData.location || '-'}</Text>
                         </View>
                     </View>
 
                     <View style={styles.divider} />
 
-                    <DetailRow icon={require('../../assets/location.png')} iconBg="#E8F4FF" iconColor="#2C7BE5" label={t('slLocation')} value={SL_DATA.location} />
-                    <DetailRow icon={require('../../assets/calendar.png')} iconBg="#FFF4E5" iconColor="#F5A623" label={t('assignedDate')} value={SL_DATA.assignedDate} />
-                    <DetailRow icon={require('../../assets/play-button.png')} iconBg="#E8FBF2" iconColor="#22A06B" label={t('startDate')} value={SL_DATA.startDate} />
-                    <DetailRow icon={require('../../assets/red-flag.png')} iconBg="#FFEBF0" iconColor="#E63E6D" label={t('endDate')} value={SL_DATA.endDate} last />
+                    <DetailRow
+                        icon={require('../../assets/location.png')}
+                        iconBg="#E8F4FF"
+                        iconColor="#2C7BE5"
+                        label={t('slLocation')}
+                        value={slData.location || '-'}
+                    />
+
+                    <DetailRow
+                        icon={require('../../assets/work.png')}
+                        iconBg="#FFF4E5"
+                        iconColor="#F5A623"
+                        label={t('positionName')}
+                        value={slData.positionName || '-'}
+                    />
+
+                    <DetailRow
+                        icon={require('../../assets/play-button.png')}
+                        iconBg="#E8FBF2"
+                        iconColor="#22A06B"
+                        label={t('startDate')}
+                        value={slData.startDate || '-'}
+                    />
+
+                    <DetailRow
+                        icon={require('../../assets/red-flag.png')}
+                        iconBg="#FFEBF0"
+                        iconColor="#E63E6D"
+                        label={t('endDate')}
+                        value={slData.endDate || '-'}
+                        last
+                    />
 
                     <TouchableOpacity
                         style={styles.primaryButton}
@@ -1052,56 +1193,56 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
     /* Activity date card (product modal) */
-activityDateCard: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF4E5',
-    borderRadius: 16,
-    padding: 14,
-    borderWidth: 1.5,
-    borderColor: '#FFD9A8',
-    alignItems: 'flex-start',
-},
-activityDateIconBg: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#F5A623',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-},
-activityDateLabel: {
-    fontFamily: 'InstrumentSans-Bold',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.6,
-    color: '#F5A623',
-    textTransform: 'uppercase',
-},
-activityDateValue: {
-    fontFamily: 'InstrumentSans-Bold',
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0A2E33',
-    marginTop: 4,
-},
-activityDateMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-},
-activityDateMetaDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#F5A623',
-    marginRight: 6,
-},
-activityDateMeta: {
-    fontFamily: 'InstrumentSans-Regular',
-    fontSize: 11,
-    color: '#6B7A7C',
-},
+    activityDateCard: {
+        flexDirection: 'row',
+        backgroundColor: '#FFF4E5',
+        borderRadius: 16,
+        padding: 14,
+        borderWidth: 1.5,
+        borderColor: '#FFD9A8',
+        alignItems: 'flex-start',
+    },
+    activityDateIconBg: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: '#F5A623',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    activityDateLabel: {
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 11,
+        fontWeight: '700',
+        letterSpacing: 0.6,
+        color: '#F5A623',
+        textTransform: 'uppercase',
+    },
+    activityDateValue: {
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#0A2E33',
+        marginTop: 4,
+    },
+    activityDateMetaRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 6,
+    },
+    activityDateMetaDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: '#F5A623',
+        marginRight: 6,
+    },
+    activityDateMeta: {
+        fontFamily: 'InstrumentSans-Regular',
+        fontSize: 11,
+        color: '#6B7A7C',
+    },
 });
 
 export default NewDashboardScreen;
