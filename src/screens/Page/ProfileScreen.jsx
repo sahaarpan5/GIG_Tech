@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
     View,
@@ -12,29 +13,14 @@ import {
     Modal,
     Dimensions,
     Alert,
+    ActivityIndicator,
     ScrollView as RNScrollView,
 } from 'react-native';
 
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
+import API from '../../util/API';
+import { useNavigation } from '@react-navigation/native';
 
-/* ---------- Sample document images (replace with real URLs from API) ---------- */
-const DOCUMENTS = {
-    aadhaar: {
-        title: 'Aadhaar Card',
-        image: require('../../assets/aadhar.png'),
-        // Placeholder sample — replace with actual aadhaar scan URL
-    },
-    pan: {
-        title: 'PAN Card',
-        image: require('../../assets/PAN.png'),
-        // Placeholder sample — replace with actual PAN scan URL
-    },
-    bank: {
-        title: 'Bank Document',
-        image: require('../../assets/chque.png'),
-        // Placeholder sample — replace with actual cheque/passbook scan URL
-    },
-};
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
 const PROFILE_TRANSLATIONS = {
     English: {
@@ -69,6 +55,8 @@ const PROFILE_TRANSLATIONS = {
         requestSent: 'Request Sent',
         requestSentMsg: 'Your change request has been submitted. Our team will review it shortly.',
         ok: 'OK',
+        guardianName: 'Guardian Name',
+        relationship: 'Relationship',
     },
     Bengali: {
         personalInfo: 'ব্যক্তিগত তথ্য',
@@ -102,6 +90,8 @@ const PROFILE_TRANSLATIONS = {
         requestSent: 'অনুরোধ পাঠানো হয়েছে',
         requestSentMsg: 'আপনার পরিবর্তনের অনুরোধ জমা দেওয়া হয়েছে। আমাদের দল শীঘ্রই এটি পর্যালোচনা করবে।',
         ok: 'ঠিক আছে',
+        guardianName: 'অভিভাবকের নাম',
+        relationship: 'সম্পর্ক',
     },
     Hindi: {
         personalInfo: 'व्यक्तिगत जानकारी',
@@ -135,25 +125,55 @@ const PROFILE_TRANSLATIONS = {
         requestSent: 'अनुरोध भेजा गया',
         requestSentMsg: 'आपका परिवर्तन अनुरोध सबमिट कर दिया गया है। हमारी टीम जल्द ही इसकी समीक्षा करेगी।',
         ok: 'ठीक है',
+        guardianName: 'अभिभावक का नाम',
+        relationship: 'रिश्ता',
     },
 };
 
 const ProfileScreen = () => {
-    /* ---- Profile data (read-only) ---- */
-    const [name] = useState('Rahul Sharma');
-    const [mobile] = useState('9876543210');
-    const [email] = useState('rahul@example.com');
-    const [gender] = useState('Male');
-    const [location] = useState('Sector 18, Noida, UP');
-    const [dob] = useState('15 Aug 1995');
-    const [qualification] = useState('Graduate');
-    const [aadhaarNo] = useState('1234 5678 9012');
-    const [panNo] = useState('ABCDE1234F');
-    const [bankName] = useState('Rahul Sharma');
-    const [accountNo] = useState('1234567890');
-    const [ifsc] = useState('SBIN0001234');
+    const navigation = useNavigation();
+    /* ---- Profile data from API ---- */
+    const [profile, setProfile] = useState({
+        name: '',
+        mobile: '',
+        email: '',
+        gender: '',
+        location: '',
+        dob: '',
+        qualification: '',
+        aadhaarNo: '',
+        panNo: '',
+        bankName: '',
+        accountNo: '',
+        ifsc: '',
+        aadhaarFile: '',
+        panFile: '',
+        bankFile: '',
+        guardianName: '',
+        relationship: '',
+    });
+
+    const {
+        name,
+        mobile,
+        email,
+        gender,
+        location,
+        dob,
+        qualification,
+        aadhaarNo,
+        panNo,
+        bankName,
+        accountNo,
+        ifsc,
+        guardianName,
+        relationship,
+    } = profile;
+
+    const [profileLoading, setProfileLoading] = useState(false);
 
     const [selectedLanguage, setSelectedLanguage] = useState('English');
+
     const t = (key) =>
         PROFILE_TRANSLATIONS[selectedLanguage]?.[key] ??
         PROFILE_TRANSLATIONS.English[key] ??
@@ -163,8 +183,145 @@ const ProfileScreen = () => {
     const [docModalVisible, setDocModalVisible] = useState(false);
     const [selectedDoc, setSelectedDoc] = useState(null);
 
+
+    const handleGoBack = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+        }
+    };
+
+    const formatDOB = (dateString) => {
+        if (!dateString) return '';
+
+        const date = new Date(dateString);
+
+        if (Number.isNaN(date.getTime())) return '';
+
+        return date.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+        });
+    };
+
+
+
+    /* Fetch Worker Details API */
+    const fetchWorkerDetails = async () => {
+        try {
+            setProfileLoading(true);
+
+            const token = await AsyncStorage.getItem('accessToken');
+            const payrollCode = await AsyncStorage.getItem('workerPayrollCode');
+
+            if (!token || !payrollCode) {
+                Alert.alert(
+                    'Error',
+                    'Login details not found. Please login again.'
+                );
+                return;
+            }
+
+            const today = new Date();
+
+            const toDate = [
+                today.getFullYear(),
+                String(today.getMonth() + 1).padStart(2, '0'),
+                String(today.getDate()).padStart(2, '0'),
+            ].join('-');
+
+            const payload = {
+                Op: 3,
+                Worker_PayrollCode: payrollCode,
+                FromDate: `${today.getFullYear()}-01-01`,
+                ToDate: toDate,
+                Sl: '',
+            };
+
+            console.log('Worker Details Request:', payload);
+
+            const response = await axios.post(
+                API.WORKER_DETAILS,
+                payload,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    timeout: 30000,
+                }
+            );
+
+            console.log(
+                'Worker Details API Status:',
+                response.data?.Status
+            );
+
+            if (
+                response.data?.Status === true &&
+                response.data?.Data
+            ) {
+                const data = response.data.Data;
+
+                setProfile({
+                    name: data.Worker_Name?.trim() || '',
+                    mobile: data.Mobile || '',
+                    email: data.EmailID || '',
+                    gender: data.GenderName || '',
+                    location: data.Location || '',
+                    guardianName: data.GuardianName || '',
+                    relationship: data.RelationShip || '',
+                    dob: formatDOB(data.DateOfBirth),
+                    qualification: data.Qualification || '',
+                    aadhaarNo: data.AADHARNo || '',
+                    panNo: data.ITMPanNo || '',
+                    bankName: data.BankAccountHolderName || '',
+                    accountNo: data.AccountNumber || '',
+                    ifsc: data.IFSC || '',
+                    aadhaarFile: data.AadharFile_Path || '',
+                    panFile: data.PANFile_Path || '',
+                    bankFile: data.BankFile_Path || '',
+                });
+            } else {
+                Alert.alert(
+                    'Failed',
+                    response.data?.Message ||
+                    'Unable to fetch worker details.'
+                );
+            }
+        } catch (error) {
+            console.log(
+                'Worker Details API Error:',
+                error.response?.data || error.message
+            );
+
+            Alert.alert(
+                'Error',
+                error.response?.data?.Message ||
+                'Unable to load profile details.'
+            );
+        } finally {
+            setProfileLoading(false);
+        }
+    };
+
     const openDocument = (docKey) => {
-        setSelectedDoc(DOCUMENTS[docKey]);
+        const documents = {
+            aadhaar: {
+                title: 'Aadhaar Card',
+                uri: profile.aadhaarFile,
+            },
+            pan: {
+                title: 'PAN Card',
+                uri: profile.panFile,
+            },
+            bank: {
+                title: 'Bank Document',
+                uri: profile.bankFile,
+            },
+        };
+
+        setSelectedDoc(documents[docKey]);
         setDocModalVisible(true);
     };
 
@@ -180,22 +337,53 @@ const ProfileScreen = () => {
     };
 
     useEffect(() => {
-        const loadLanguage = async () => {
+        const initializeProfile = async () => {
             try {
-                const savedLanguage = await AsyncStorage.getItem('selectedLanguage');
-                if (savedLanguage && PROFILE_TRANSLATIONS[savedLanguage]) {
+                const savedLanguage = await AsyncStorage.getItem(
+                    'selectedLanguage'
+                );
+
+                if (
+                    savedLanguage &&
+                    PROFILE_TRANSLATIONS[savedLanguage]
+                ) {
                     setSelectedLanguage(savedLanguage);
                 }
             } catch (error) {
-                console.log('Error loading saved language:', error);
+                console.log(
+                    'Error loading saved language:',
+                    error
+                );
             }
+
+            fetchWorkerDetails();
         };
-        loadLanguage();
+
+        initializeProfile();
     }, []);
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            <StatusBar
+                barStyle="light-content"
+                translucent
+                backgroundColor="transparent"
+            />
+
+            {/* Profile API Loader */}
+            {profileLoading && (
+                <View style={styles.profileLoaderOverlay}>
+                    <View style={styles.profileLoaderBox}>
+                        <ActivityIndicator
+                            size="large"
+                            color="#047282"
+                        />
+                        <Text style={styles.profileLoaderText}>
+                            Loading profile details...
+                        </Text>
+                    </View>
+                </View>
+            )}
 
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
@@ -203,6 +391,17 @@ const ProfileScreen = () => {
             >
                 {/* ============ HEADER ============ */}
                 <View style={styles.header}>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={handleGoBack}
+                        activeOpacity={0.7}
+                    >
+                        <Image
+                            source={require('../../assets/arrow-back.png')}
+                            style={styles.backIcon}
+                            resizeMode="contain"
+                        />
+                    </TouchableOpacity>
                     <View style={styles.headerCircle1} />
                     <View style={styles.headerCircle2} />
 
@@ -210,32 +409,55 @@ const ProfileScreen = () => {
                         <View style={styles.avatar}>
                             <Image
                                 source={require('../../assets/profileone.png')}
-                                style={{ height: 44, width: 44, tintColor: '#047282' }}
+                                style={{
+                                    height: 44,
+                                    width: 44,
+                                    tintColor: '#047282',
+                                }}
                                 resizeMode="contain"
                             />
                         </View>
-                        <TouchableOpacity style={styles.avatarEdit} activeOpacity={0.8}>
+
+                        <TouchableOpacity
+                            style={styles.avatarEdit}
+                            activeOpacity={0.8}
+                        >
                             <Image
                                 source={require('../../assets/camera.png')}
-                                style={{ height: 14, width: 14, tintColor: '#FFFFFF' }}
+                                style={{
+                                    height: 14,
+                                    width: 14,
+                                    tintColor: '#FFFFFF',
+                                }}
                                 resizeMode="contain"
                             />
                         </TouchableOpacity>
                     </View>
 
-                    <Text style={styles.profileName}>{name || t('yourName')}</Text>
+                    <Text style={styles.profileName}>
+                        {name || t('yourName')}
+                    </Text>
 
                     {/* Verified badge */}
                     <View style={styles.verifiedBadge}>
                         <Image
                             source={require('../../assets/checked.png')}
-                            style={{ width: 12, height: 12, tintColor: '#FFFFFF' }}
+                            style={{
+                                width: 12,
+                                height: 12,
+                                tintColor: '#FFFFFF',
+                            }}
                             resizeMode="contain"
                         />
-                        <Text style={styles.verifiedText}>{t('verified')}</Text>
+
+                        <Text style={styles.verifiedText}>
+                            {t('verified')}
+                        </Text>
                     </View>
 
-                    <Text style={styles.profileEmail}>{email || t('yourEmail')}</Text>
+                    <Text style={styles.profileEmail}>
+                        {mobile}
+                    </Text>
                 </View>
 
                 {/* ============ FORM CARD ============ */}
@@ -252,15 +474,13 @@ const ProfileScreen = () => {
                         label={t('fullName')}
                         value={name}
                         onChangeRequest={handleChangeRequest}
-                        changeLabel={t('changeRequest')}
                         icon={require('../../assets/person-outline.png')}
                     />
 
                     <ReadOnlyField
                         label={t('mobile')}
-                        value={`+91 ${mobile}`}
+                        value={mobile ? `+91 ${mobile}` : ''}
                         onChangeRequest={handleChangeRequest}
-                        changeLabel={t('changeRequest')}
                         icon={require('../../assets/smartphone.png')}
                     />
 
@@ -268,7 +488,6 @@ const ProfileScreen = () => {
                         label={t('email')}
                         value={email}
                         onChangeRequest={handleChangeRequest}
-                        changeLabel={t('changeRequest')}
                         icon={require('../../assets/mail.png')}
                     />
 
@@ -276,23 +495,30 @@ const ProfileScreen = () => {
                         label={t('gender')}
                         value={gender}
                         onChangeRequest={handleChangeRequest}
-                        changeLabel={t('changeRequest')}
+                        icon={require('../../assets/person-outline.png')}
+                    />
+
+
+                    <ReadOnlyField
+                        label={t('guardianName')}
+                        value={guardianName}
+                        onChangeRequest={handleChangeRequest}
                         icon={require('../../assets/person-outline.png')}
                     />
 
                     <ReadOnlyField
-                        label={t('location')}
-                        value={location}
+                        label={t('relationship')}
+                        value={relationship}
                         onChangeRequest={handleChangeRequest}
-                        changeLabel={t('changeRequest')}
-                        icon={require('../../assets/location.png')}
+                        icon={require('../../assets/person-outline.png')}
                     />
+
+
 
                     <ReadOnlyField
                         label={t('dob')}
                         value={dob}
                         onChangeRequest={handleChangeRequest}
-                        changeLabel={t('changeRequest')}
                         icon={require('../../assets/calendar.png')}
                     />
 
@@ -300,7 +526,6 @@ const ProfileScreen = () => {
                         label={t('qualification')}
                         value={qualification}
                         onChangeRequest={handleChangeRequest}
-                        changeLabel={t('changeRequest')}
                         icon={require('../../assets/school-outline.png')}
                         last
                     />
@@ -317,7 +542,6 @@ const ProfileScreen = () => {
                         label={t('aadhaar')}
                         value={aadhaarNo}
                         onChangeRequest={handleChangeRequest}
-                        changeLabel={t('changeRequest')}
                         icon={require('../../assets/card-outline.png')}
                     />
 
@@ -331,7 +555,6 @@ const ProfileScreen = () => {
                         label={t('pan')}
                         value={panNo}
                         onChangeRequest={handleChangeRequest}
-                        changeLabel={t('changeRequest')}
                         icon={require('../../assets/card-outline.png')}
                     />
 
@@ -352,9 +575,8 @@ const ProfileScreen = () => {
 
                     <ReadOnlyField
                         label={t('bankName')}
-                        value={bankName}
+                        value={name}
                         onChangeRequest={handleChangeRequest}
-                        changeLabel={t('changeRequest')}
                         icon={require('../../assets/person-outline.png')}
                     />
 
@@ -362,7 +584,6 @@ const ProfileScreen = () => {
                         label={t('accountNo')}
                         value={accountNo}
                         onChangeRequest={handleChangeRequest}
-                        changeLabel={t('changeRequest')}
                         icon={require('../../assets/keypad-outline.png')}
                     />
 
@@ -370,7 +591,6 @@ const ProfileScreen = () => {
                         label={t('ifsc')}
                         value={ifsc}
                         onChangeRequest={handleChangeRequest}
-                        changeLabel={t('changeRequest')}
                         icon={require('../../assets/bank.png')}
                     />
 
@@ -397,18 +617,33 @@ const ProfileScreen = () => {
                 <View style={styles.docBackdrop}>
                     <View style={styles.docSheet}>
                         <View style={styles.docHeader}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    flex: 1,
+                                }}
+                            >
                                 <View style={styles.docHeaderIconBox}>
                                     <Image
                                         source={require('../../assets/document.png')}
-                                        style={{ width: 16, height: 16, tintColor: '#047282' }}
+                                        style={{
+                                            width: 16,
+                                            height: 16,
+                                            tintColor: '#047282',
+                                        }}
                                         resizeMode="contain"
                                     />
                                 </View>
-                                <Text style={styles.docTitle} numberOfLines={1}>
+
+                                <Text
+                                    style={styles.docTitle}
+                                    numberOfLines={1}
+                                >
                                     {selectedDoc?.title}
                                 </Text>
                             </View>
+
                             <TouchableOpacity
                                 onPress={closeDocument}
                                 style={styles.docCloseBtn}
@@ -416,7 +651,11 @@ const ProfileScreen = () => {
                             >
                                 <Image
                                     source={require('../../assets/close.png')}
-                                    style={{ height: 20, width: 20, tintColor: '#6B7A7C' }}
+                                    style={{
+                                        height: 20,
+                                        width: 20,
+                                        tintColor: '#6B7A7C',
+                                    }}
                                     resizeMode="contain"
                                 />
                             </TouchableOpacity>
@@ -424,9 +663,9 @@ const ProfileScreen = () => {
 
                         {/* Document image preview */}
                         <View style={styles.docImageWrap}>
-                            {selectedDoc?.image ? (
+                            {selectedDoc?.uri ? (
                                 <Image
-                                    source={selectedDoc.image}
+                                    source={{ uri: selectedDoc.uri }}
                                     style={styles.docImage}
                                     resizeMode="contain"
                                 />
@@ -434,9 +673,14 @@ const ProfileScreen = () => {
                                 <View style={styles.docEmptyState}>
                                     <Image
                                         source={require('../../assets/document.png')}
-                                        style={{ width: 56, height: 56, tintColor: '#D4E9EC' }}
+                                        style={{
+                                            width: 56,
+                                            height: 56,
+                                            tintColor: '#D4E9EC',
+                                        }}
                                         resizeMode="contain"
                                     />
+
                                     <Text style={styles.docEmptyText}>
                                         {t('documentPreview')}
                                     </Text>
@@ -449,12 +693,22 @@ const ProfileScreen = () => {
                             <View style={styles.docMetaChip}>
                                 <Image
                                     source={require('../../assets/checked.png')}
-                                    style={{ width: 12, height: 12, tintColor: '#22A06B' }}
+                                    style={{
+                                        width: 12,
+                                        height: 12,
+                                        tintColor: '#22A06B',
+                                    }}
                                     resizeMode="contain"
                                 />
-                                <Text style={styles.docMetaText}>{t('verified')}</Text>
+
+                                <Text style={styles.docMetaText}>
+                                    {t('verified')}
+                                </Text>
                             </View>
-                            <Text style={styles.docMetaUploaded}>Uploaded</Text>
+
+                            <Text style={styles.docMetaUploaded}>
+                                Uploaded
+                            </Text>
                         </View>
 
                         <TouchableOpacity
@@ -462,7 +716,9 @@ const ProfileScreen = () => {
                             onPress={closeDocument}
                             activeOpacity={0.85}
                         >
-                            <Text style={styles.docCloseFullBtnText}>{t('close')}</Text>
+                            <Text style={styles.docCloseFullBtnText}>
+                                {t('close')}
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -473,74 +729,175 @@ const ProfileScreen = () => {
 
 /* ---------- Reusable components ---------- */
 
-const SectionHeader = ({ icon, title, iconBg, iconColor }) => (
+const SectionHeader = ({
+    icon,
+    title,
+    iconBg,
+    iconColor,
+}) => (
     <View style={styles.sectionHeader}>
-        <View style={[styles.sectionIconBox, { backgroundColor: iconBg }]}>
+        <View
+            style={[
+                styles.sectionIconBox,
+                { backgroundColor: iconBg },
+            ]}
+        >
             <Image
                 source={icon}
-                style={{ width: 18, height: 18, resizeMode: 'contain', tintColor: iconColor }}
+                style={{
+                    width: 18,
+                    height: 18,
+                    resizeMode: 'contain',
+                    tintColor: iconColor,
+                }}
             />
         </View>
-        <Text style={styles.sectionTitle}>{title}</Text>
+
+        <Text style={styles.sectionTitle}>
+            {title}
+        </Text>
     </View>
 );
 
 /* Read-only field with Change Request button */
-const ReadOnlyField = ({ label, value, icon, onChangeRequest, changeLabel, last }) => (
+const ReadOnlyField = ({
+    label,
+    value,
+    icon,
+    onChangeRequest,
+    changeLabel,
+    last,
+}) => (
     <View style={styles.fieldBlock}>
-        <Text style={styles.fieldLabel}>{label}</Text>
-        <View style={[styles.readOnlyRow, last && { marginBottom: 4 }]}>
+        <Text style={styles.fieldLabel}>
+            {label}
+        </Text>
+
+        <View
+            style={[
+                styles.readOnlyRow,
+                last && { marginBottom: 4 },
+            ]}
+        >
             <Image
                 source={icon}
                 style={styles.readOnlyIcon}
                 resizeMode="contain"
             />
-            <Text style={styles.readOnlyValue} numberOfLines={1}>
-                {value}
+
+            <Text
+                style={styles.readOnlyValue}
+                numberOfLines={1}
+            >
+                {value || '-'}
             </Text>
+
             <TouchableOpacity
                 style={styles.changeBtn}
                 onPress={onChangeRequest}
                 activeOpacity={0.8}
             >
-                <Text style={styles.changeBtnText}>{changeLabel}</Text>
+                <Text style={styles.changeBtnText}>
+                    {changeLabel}
+                </Text>
             </TouchableOpacity>
         </View>
     </View>
 );
 
 /* Document field with View button */
-const ViewDocumentField = ({ label, onView, viewLabel, last }) => (
+const ViewDocumentField = ({
+    label,
+    onView,
+    viewLabel,
+    last,
+}) => (
     <View style={styles.fieldBlock}>
-        <Text style={styles.fieldLabel}>{label}</Text>
-        <View style={[styles.docRow, last && { marginBottom: 4 }]}>
+        <Text style={styles.fieldLabel}>
+            {label}
+        </Text>
+
+        <View
+            style={[
+                styles.docRow,
+                last && { marginBottom: 4 },
+            ]}
+        >
             <View style={styles.docIconBox}>
                 <Image
                     source={require('../../assets/document.png')}
-                    style={{ width: 20, height: 20, tintColor: '#047282' }}
+                    style={{
+                        width: 20,
+                        height: 20,
+                        tintColor: '#047282',
+                    }}
                     resizeMode="contain"
                 />
             </View>
+
             <View style={{ flex: 1 }}>
-                <Text style={styles.docFileLabel} numberOfLines={1}>
+                <Text
+                    style={styles.docFileLabel}
+                    numberOfLines={1}
+                >
                     {label}
                 </Text>
-                <Text style={styles.docFileHint}>Tap to preview</Text>
+
+                <Text style={styles.docFileHint}>
+                    Tap to preview
+                </Text>
             </View>
+
             <TouchableOpacity
                 style={styles.viewDocBtn}
                 onPress={onView}
                 activeOpacity={0.8}
             >
-                <Text style={styles.viewDocBtnText}>{viewLabel}</Text>
+                <Text style={styles.viewDocBtnText}>
+                    {viewLabel}
+                </Text>
             </TouchableOpacity>
         </View>
     </View>
 );
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F2F9FA' },
-    scrollContent: { paddingBottom: 30 },
+    container: {
+        flex: 1,
+        backgroundColor: '#F2F9FA',
+    },
+
+    /* Profile loader */
+    profileLoaderOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(255,255,255,0.75)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 999,
+        elevation: 999,
+    },
+    profileLoaderBox: {
+        backgroundColor: '#FFFFFF',
+        paddingHorizontal: 25,
+        paddingVertical: 22,
+        borderRadius: 16,
+        alignItems: 'center',
+        elevation: 5,
+    },
+    profileLoaderText: {
+        marginTop: 12,
+        fontSize: 13,
+        fontFamily: 'InstrumentSans-Bold',
+        color: '#047282',
+    },
+
+    scrollContent: {
+        paddingBottom: 30,
+    },
 
     /* Header */
     header: {
@@ -554,32 +911,56 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     headerCircle1: {
-        position: 'absolute', top: -80, right: -80,
-        width: 220, height: 220, borderRadius: 110,
+        position: 'absolute',
+        top: -80,
+        right: -80,
+        width: 220,
+        height: 220,
+        borderRadius: 110,
         backgroundColor: 'rgba(254,169,47,0.18)',
     },
     headerCircle2: {
-        position: 'absolute', bottom: -100, left: -60,
-        width: 200, height: 200, borderRadius: 100,
+        position: 'absolute',
+        bottom: -100,
+        left: -60,
+        width: 200,
+        height: 200,
+        borderRadius: 100,
         backgroundColor: 'rgba(123,92,255,0.16)',
     },
-    avatarWrap: { position: 'relative', marginBottom: 14 },
+    avatarWrap: {
+        position: 'relative',
+        marginBottom: 14,
+    },
     avatar: {
-        width: 92, height: 92, borderRadius: 46,
+        width: 92,
+        height: 92,
+        borderRadius: 46,
         backgroundColor: '#FFFFFF',
-        justifyContent: 'center', alignItems: 'center',
-        borderWidth: 3, borderColor: 'rgba(255,255,255,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 3,
+        borderColor: 'rgba(255,255,255,0.4)',
     },
     avatarEdit: {
-        position: 'absolute', bottom: 0, right: 0,
-        width: 30, height: 30, borderRadius: 15,
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        width: 30,
+        height: 30,
+        borderRadius: 15,
         backgroundColor: '#FEA92F',
-        justifyContent: 'center', alignItems: 'center',
-        borderWidth: 2, borderColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#FFFFFF',
     },
     profileName: {
-        fontFamily: 'InstrumentSans-Bold', fontSize: 22, fontWeight: '700',
-        color: '#FFFFFF', letterSpacing: -0.3,
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        letterSpacing: -0.3,
     },
     verifiedBadge: {
         flexDirection: 'row',
@@ -602,8 +983,10 @@ const styles = StyleSheet.create({
         letterSpacing: 0.3,
     },
     profileEmail: {
-        fontFamily: 'InstrumentSans-Regular', fontSize: 13,
-        color: 'rgba(255,255,255,0.82)', marginTop: 3,
+        fontFamily: 'InstrumentSans-Regular',
+        fontSize: 13,
+        color: 'rgba(255,255,255,0.82)',
+        marginTop: 3,
     },
 
     /* Form card */
@@ -628,13 +1011,19 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     sectionIconBox: {
-        width: 34, height: 34, borderRadius: 11,
-        justifyContent: 'center', alignItems: 'center',
+        width: 34,
+        height: 34,
+        borderRadius: 11,
+        justifyContent: 'center',
+        alignItems: 'center',
         marginRight: 10,
     },
     sectionTitle: {
-        fontFamily: 'InstrumentSans-Bold', fontSize: 15, fontWeight: '700',
-        color: '#0A2E33', letterSpacing: -0.2,
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#0A2E33',
+        letterSpacing: -0.2,
     },
 
     /* Field block */
@@ -642,8 +1031,11 @@ const styles = StyleSheet.create({
         marginTop: 14,
     },
     fieldLabel: {
-        fontFamily: 'InstrumentSans-Bold', fontSize: 12, fontWeight: '600',
-        color: '#0A2E33', marginBottom: 6,
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#0A2E33',
+        marginBottom: 6,
     },
 
     /* Read-only row */
@@ -732,7 +1124,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.2,
     },
 
-    /* ============ DOCUMENT MODAL ============ */
+    /* Document modal */
     docBackdrop: {
         flex: 1,
         backgroundColor: 'rgba(10,46,51,0.75)',
@@ -845,6 +1237,23 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#FFFFFF',
         letterSpacing: 0.2,
+    },
+    backButton: {
+        position: 'absolute',
+        top: Platform.OS === 'ios' ? 55 : 40,
+        left: 20,
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: 'rgba(255,255,255,0.18)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 10,
+    },
+    backIcon: {
+        width: 20,
+        height: 20,
+        tintColor: '#FFFFFF',
     },
 });
 

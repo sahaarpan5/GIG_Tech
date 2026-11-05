@@ -15,10 +15,15 @@ import {
     Image,
     ActivityIndicator,
     Alert,
+    PermissionsAndroid,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import API from '../../util/API';
+import Geolocation from '@react-native-community/geolocation';
+import { captureRef } from 'react-native-view-shot';
+
+
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -44,7 +49,7 @@ I understand that:
 
 By signing below, I acknowledge that I have read, understood, and agree to the above terms and conditions.`;
 
-const RATE_PER_UNIT = 95.8100;
+
 
 const LANGUAGES = [
     { key: 'English', label: 'English', native: 'English', code: 'EN' },
@@ -100,6 +105,10 @@ const TRANSLATIONS = {
         activityDate: 'Activity Date',
         today: 'Today',
         positionName: 'Position Name',
+        goodMorning: 'Good morning',
+        goodAfternoon: 'Good afternoon',
+        goodEvening: 'Good evening',
+        goodNight: 'Good night',
     },
     Bengali: {
         greeting: 'সুপ্রভাত, Rahul 👋', subtitle: 'আজকের কাজের বিবরণ', chooseLanguage: 'ভাষা নির্বাচন করুন',
@@ -112,6 +121,10 @@ const TRANSLATIONS = {
         activityDate: 'কার্যকলাপের তারিখ',
         today: 'আজ',
         positionName: 'পদের নাম',
+        goodMorning: 'সুপ্রভাত',
+        goodAfternoon: 'শুভ অপরাহ্ন',
+        goodEvening: 'শুভ সন্ধ্যা',
+        goodNight: 'শুভ রাত্রি',
     },
     Hindi: {
         greeting: 'सुप्रभात, Rahul 👋', subtitle: 'आज के काम का विवरण', chooseLanguage: 'भाषा चुनें',
@@ -124,13 +137,17 @@ const TRANSLATIONS = {
         activityDate: 'गतिविधि तिथि',
         today: 'आज',
         positionName: 'पद का नाम',
+        goodMorning: 'सुप्रभात',
+        goodAfternoon: 'नमस्कार',
+        goodEvening: 'शुभ संध्या',
+        goodNight: 'शुभ रात्रि',
     },
 };
 
 /* =====================================================
    SIGNATURE PAD
    ===================================================== */
-const SignaturePad = ({ onSignedChange, signatureRef }) => {
+const SignaturePad = ({ onSignedChange, signatureRef, captureRef }) => {
     const [paths, setPaths] = useState([]);
     const currentPath = useRef([]);
     const padHeight = 160;
@@ -170,6 +187,8 @@ const SignaturePad = ({ onSignedChange, signatureRef }) => {
     return (
         <View>
             <View
+                ref={captureRef}
+                collapsable={false}
                 style={[styles.signatureBox, { height: padHeight }]}
                 {...panResponder.panHandlers}
             >
@@ -225,6 +244,15 @@ const SignaturePad = ({ onSignedChange, signatureRef }) => {
    ===================================================== */
 const NewDashboardScreen = () => {
     const navigation = useNavigation();
+
+    const [isAgreed, setIsAgreed] = useState(false);
+
+    const [workerName, setWorkerName] = useState('');
+    const [consentContent, setConsentContent] = useState('');
+    const [slContent, setSlContent] = useState(0);
+    const [contentID, setContentID] = useState(0);
+    const [savingConsent, setSavingConsent] = useState(false);
+
     const [consentVisible, setConsentVisible] = useState(false);
     const [productVisible, setProductVisible] = useState(false);
     const [languageModalVisible, setLanguageModalVisible] = useState(false);
@@ -236,6 +264,8 @@ const NewDashboardScreen = () => {
 
     const [isSigned, setIsSigned] = useState(false);
     const signatureRef = useRef(null);
+    const signatureCaptureRef = useRef(null);
+
 
     const [quantity, setQuantity] = useState('');
 
@@ -248,25 +278,246 @@ const NewDashboardScreen = () => {
     });
 
     const [slLoading, setSlLoading] = useState(false);
-    const [productName] = useState('GIG deployment commissions on oshea Product Sale (PD0015)');
 
-    const rate = quantity ? Number(quantity) * RATE_PER_UNIT : 0;
+
+    const [productDetails, setProductDetails] = useState([]);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [productDropdownVisible, setProductDropdownVisible] = useState(false);
+
+    const ratePerUnit = Number(selectedProduct?.Rate || 0);
+    const totalAmount = quantity ? Number(quantity) * ratePerUnit : 0;
+
+    const [location, setLocation] = useState('');
+    const GOOGLE_MAPS_API_KEY =
+        'AIzaSyBuxUn1s4S2yv8fqwd0wGUTFegxNyASL1g'
+    const [latitude, setLatitude] = useState(null);
+    const [longitude, setLongitude] = useState(null);
+    const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+    const [activityDate, setActivityDate] = useState(new Date());
+    const [showActivityDatePicker, setShowActivityDatePicker] = useState(false);
+    const [showActivityDateModal, setShowActivityDateModal] = useState(false);
+    const [calendarMonth, setCalendarMonth] = useState(new Date());
+
+    const [savingProduct, setSavingProduct] = useState(false);
+    const [showSignaturePad, setShowSignaturePad] = useState(false);
+
 
     const handleStartActivity = () => {
         setIsSigned(false);
-        setConsentVisible(true);
+        setShowSignaturePad(false);
+        if (slContent === 0) {
+            setConsentVisible(true);
+        } else {
+            setConsentVisible(false);
+            setProductVisible(true);
+        }
+
     };
 
-    const handleSaveConsent = () => {
-        if (!isSigned) return;
-        setConsentVisible(false);
-        setQuantity('');
-        setProductVisible(true);
+    const handleSaveConsent = async () => {
+        if (!isSigned) {
+            Alert.alert('Validation', 'Please provide your signature.');
+            return;
+        }
+
+        try {
+            setSavingConsent(true);
+
+            const token = await AsyncStorage.getItem('accessToken');
+            const payrollCode = await AsyncStorage.getItem('workerPayrollCode');
+
+            if (!token || !payrollCode) {
+                Alert.alert('Error', 'Login details not found. Please login again.');
+                return;
+            }
+
+            const signatureBase64 = await captureRef(
+                signatureCaptureRef.current,
+                {
+                    format: 'png',
+                    quality: 1,
+                    result: 'base64',
+                }
+            );
+
+
+            const payload = {
+                Op: 1,
+                Worker_PayrollCode: payrollCode,
+                ConsentId: contentID,
+                OTP: '',
+                ConsentSignature: signatureBase64,
+                Ip: ""
+            };
+
+            console.log('Consent Payload:', {
+                ...payload,
+                ConsentSignature: '[BASE64 SIGNATURE]',
+            });
+
+            const response = await axios.post(
+                API.CONSENT,
+                payload,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    timeout: 30000,
+                }
+            );
+
+            console.log('Consent Response:', response.data);
+
+            if (response.data?.Status === true) {
+                setSlContent(1);
+
+
+
+                Alert.alert(
+                    'Success',
+                    response.data?.Message || 'Consent saved successfully.',
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => {
+                                setConsentVisible(false);
+                                setQuantity('');
+                                setProductVisible(true);
+                            },
+                        },
+                    ]
+                );
+            } else {
+                Alert.alert(
+                    'Failed',
+                    response.data?.Message || 'Unable to save consent.'
+                );
+            }
+
+        } catch (error) {
+            console.log(
+                'Consent API Error:',
+                error.response?.data || error.message
+            );
+
+            Alert.alert(
+                'Error',
+                error.response?.data?.Message || 'Unable to save consent.'
+            );
+        } finally {
+            setSavingConsent(false);
+        }
     };
 
-    const handleSaveProduct = () => {
-        setProductVisible(false);
-        console.log('Saved:', { productName, quantity, rate });
+    const handleSaveProduct = async () => {
+        if (!selectedProduct) {
+            Alert.alert('Validation', 'Please select a product.');
+            return;
+        }
+
+        if (!quantity || Number(quantity) <= 0) {
+            Alert.alert('Validation', 'Please enter a valid quantity.');
+            return;
+        }
+
+        try {
+            setSavingProduct(true);
+
+            // Login details
+            const token = await AsyncStorage.getItem('accessToken');
+            const payrollCode = await AsyncStorage.getItem('workerPayrollCode');
+            const workerId = await AsyncStorage.getItem('workerId');
+
+            // Location details (if previously saved in AsyncStorage)
+
+
+            if (!token || !payrollCode || !workerId) {
+                Alert.alert('Error', 'Login details not found. Please login again.');
+                return;
+            }
+
+            // Format date as YYYY-MM-DD
+            const year = activityDate.getFullYear();
+            const month = String(activityDate.getMonth() + 1).padStart(2, '0');
+            const day = String(activityDate.getDate()).padStart(2, '0');
+
+            const activityDateString = `${year}-${month}-${day}`;
+
+            const rate = Number(selectedProduct.Rate || 0);
+            const value = Number(quantity);
+            const totalAmount = rate * value;
+
+            const payload = {
+                Op: 1,
+                Worker_PayrollCode: payrollCode,
+                LoginId: Number(workerId),
+                SlId: Number(selectedProduct.SL_Id),
+                ProductCode: selectedProduct.Code,
+                Product_Name: selectedProduct.Name,
+                Remarks: 'OK',
+                Unite_Name: selectedProduct.UnitType,
+                Rate: rate,
+                Value: value,
+                TotalAmount: totalAmount,
+                Activity_Date: activityDateString,
+                Lat: Number(latitude || 0),
+                Long: Number(longitude || 0),
+                Ip: '',
+                Path: '',
+            };
+
+            console.log('Worker Activity Save Payload:', payload);
+
+            const response = await axios.post(
+                API.GIG_WORKER_ACTIVITY_SAVE,
+                payload,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    timeout: 30000,
+                }
+            );
+
+            console.log('Worker Activity Save Response:', response.data);
+
+            if (response.data?.Status === true) {
+                Alert.alert(
+                    'Success',
+                    response.data?.Message || 'Worker activity saved successfully.',
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => {
+                                setProductVisible(false);
+                                setQuantity('');
+                            },
+                        },
+                    ]
+                );
+            } else {
+                Alert.alert(
+                    'Failed',
+                    response.data?.Message || 'Unable to save worker activity.'
+                );
+            }
+
+        } catch (error) {
+            console.log(
+                'Worker Activity Save Error:',
+                error.response?.data || error.message
+            );
+
+            Alert.alert(
+                'Error',
+                error.response?.data?.Message ||
+                'Something went wrong while saving worker activity.'
+            );
+        } finally {
+            setSavingProduct(false);
+        }
     };
 
 
@@ -293,7 +544,232 @@ const NewDashboardScreen = () => {
 
     useEffect(() => {
         fetchSLDetails();
+        fetchCurrentLocation();
     }, []);
+
+    useEffect(() => {
+        const loadGreetingDetails = async () => {
+            try {
+                const name = await AsyncStorage.getItem('workerName');
+                setWorkerName(name || 'User');
+            } catch (error) {
+                console.log('Greeting Error:', error);
+            }
+        };
+
+        loadGreetingDetails();
+    }, []);
+
+
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+
+        if (hour >= 5 && hour < 12) {
+            return t('goodMorning');
+        } else if (hour >= 12 && hour < 17) {
+            return t('goodAfternoon');
+        } else if (hour >= 17 && hour < 21) {
+            return t('goodEvening');
+        } else {
+            return t('goodNight');
+        }
+    };
+
+
+    const requestLocationPermission = async () => {
+        if (Platform.OS !== 'android') {
+            return true;
+        }
+
+        try {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                {
+                    title: 'Location Permission',
+                    message:
+                        'Genius GIG Tech needs your location to find nearby opportunities and set your service location.',
+                    buttonPositive: 'Allow',
+                    buttonNegative: 'Cancel',
+                }
+            );
+
+            return granted === PermissionsAndroid.RESULTS.GRANTED;
+        } catch (error) {
+            console.log('Permission error:', error);
+            return false;
+        }
+    };
+
+
+
+    const fetchCurrentLocation = async () => {
+        setIsFetchingLocation(true);
+
+        const hasPermission = await requestLocationPermission();
+
+        if (!hasPermission) {
+            setIsFetchingLocation(false);
+
+            Alert.alert(
+                'Location Permission Required',
+                'Please allow location permission from your phone settings to continue.'
+            );
+
+            return;
+        }
+
+        Geolocation.getCurrentPosition(
+            async (position) => {
+                console.log('Current position:', position);
+
+                const { latitude, longitude } = position.coords;
+
+                setLatitude(latitude);
+                setLongitude(longitude);
+
+                try {
+                    const response = await fetch(
+                        `https://maps.googleapis.com/maps/api/geocode/json?` +
+                        `latlng=${latitude},${longitude}` +
+                        `&key=${GOOGLE_MAPS_API_KEY}`
+                    );
+
+                    const data = await response.json();
+
+                    console.log('Google Address:', data);
+
+                    if (
+                        data.status === 'OK' &&
+                        data.results?.length > 0
+                    ) {
+                        const result = data.results[0];
+
+                        const components = result.address_components || [];
+
+                        // Full address
+                        const address = result.formatted_address || '';
+
+                        // Area
+                        const areaComponent = components.find(component =>
+                            component.types?.includes('sublocality_level_1')
+                        ) || components.find(component =>
+                            component.types?.includes('sublocality')
+                        ) || components.find(component =>
+                            component.types?.includes('neighborhood')
+                        ) || components.find(component =>
+                            component.types?.includes('locality')
+                        );
+
+                        // PIN Code
+                        const pincodeComponent = components.find(component =>
+                            component.types?.includes('postal_code')
+                        );
+
+                        const selectedArea =
+                            areaComponent?.long_name || '';
+
+                        const selectedPincode =
+                            pincodeComponent?.long_name || '';
+
+                        console.log('Address:', address);
+                        console.log('Area:', selectedArea);
+                        console.log('Pincode:', selectedPincode);
+                        console.log('Latitude:', latitude);
+                        console.log('Longitude:', longitude);
+
+                        setLocation(address);
+
+                    } else {
+                        console.log(
+                            'Google Geocoding Error:',
+                            data.status,
+                            data.error_message
+                        );
+
+                        setLocation(
+                            `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+                        );
+                    }
+
+                } catch (error) {
+                    console.log(
+                        'Google Address Error:',
+                        error
+                    );
+
+                    setLocation(
+                        `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+                    );
+                }
+
+                setIsFetchingLocation(false);
+            },
+
+            (error) => {
+                console.log('Location error:', error);
+
+                setIsFetchingLocation(false);
+
+                if (error.code === 3) {
+                    Alert.alert(
+                        'Location Timeout',
+                        'Unable to get your current location. Please make sure GPS/Location is turned on and try again.'
+                    );
+                } else if (error.code === 1) {
+                    Alert.alert(
+                        'Permission Denied',
+                        'Please allow location permission to continue.'
+                    );
+                } else {
+                    Alert.alert(
+                        'Location Error',
+                        'Unable to determine your current location. Please try again.'
+                    );
+                }
+            },
+
+            {
+                enableHighAccuracy: false,
+                timeout: 30000,
+                maximumAge: 60000,
+                distanceFilter: 10,
+            }
+        );
+    };
+
+    const openActivityCalendar = () => {
+        setCalendarMonth(new Date(activityDate));
+        setShowActivityDateModal(true);
+    };
+
+    const getCalendarDays = () => {
+        const year = calendarMonth.getFullYear();
+        const month = calendarMonth.getMonth();
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const totalDays = new Date(year, month + 1, 0).getDate();
+
+        return [
+            ...Array(firstDay).fill(null),
+            ...Array.from(
+                { length: totalDays },
+                (_, i) => new Date(year, month, i + 1)
+            ),
+        ];
+    };
+
+    const isFutureDate = (date) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        return date > today;
+    };
+
+    const changeMonth = (value) => {
+        setCalendarMonth(prev =>
+            new Date(prev.getFullYear(), prev.getMonth() + value, 1)
+        );
+    };
 
 
 
@@ -353,6 +829,18 @@ const NewDashboardScreen = () => {
                     startDate: formatSLDate(data.StartDate),
                     endDate: formatSLDate(data.EndDate),
                 });
+
+                const products = data.ProductDetails || [];
+
+                setProductDetails(products);
+                setSelectedProduct(products.length > 0 ? products[0] : null);
+                setProductDropdownVisible(false);
+
+                setConsentContent(data.ConsentContent || '');
+
+
+                setSlContent(Number(data.Worker_ConsentStatus));
+                setContentID(Number(data.ConsentId));
             } else {
                 Alert.alert(
                     'Failed',
@@ -393,7 +881,7 @@ const NewDashboardScreen = () => {
 
                     <View style={styles.headerRow}>
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.greeting}>{t('greeting')}</Text>
+                            <Text style={styles.greeting}>{getGreeting()}, {workerName}</Text>
                             <Text style={styles.subGreeting}>{t('subtitle')}</Text>
                         </View>
 
@@ -409,13 +897,13 @@ const NewDashboardScreen = () => {
                         </TouchableOpacity>
 
                         {/* Notification bell */}
-                        <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8}>
+                        <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8} onPress={() => navigation.replace('NewLoginScreen')}>
                             <Image
-                                source={require('../../assets/notifications-outline.png')}
+                                source={require('../../assets/poweroff.png')}
                                 style={{ height: 22, width: 22, tintColor: '#FFFFFF' }}
                                 resizeMode="contain"
                             />
-                            <View style={styles.bellDot} />
+
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -576,12 +1064,10 @@ const NewDashboardScreen = () => {
                             />
                         </View>
                         <Text style={styles.profileTitle}>{t('profileStatus')}</Text>
-                        <View style={styles.percentBadge}>
-                            <Text style={styles.percentBadgeText}>{PROFILE.percent}%</Text>
-                        </View>
+                       
                     </View>
 
-                    <View style={styles.profileStatusRow}>
+                    {/* <View style={styles.profileStatusRow}>
                         <Image
                             source={
                                 PROFILE.percent < 100
@@ -600,13 +1086,13 @@ const NewDashboardScreen = () => {
                                 ? t('profileIncomplete')
                                 : t('profileComplete')}
                         </Text>
-                    </View>
+                    </View> */}
 
-                    <View style={styles.progressBar}>
+                    {/* <View style={styles.progressBar}>
                         <View style={[styles.progressFillOuter, { width: `${PROFILE.percent}%` }]}>
                             <View style={styles.progressFillInner} />
                         </View>
-                    </View>
+                    </View> */}
 
                     <TouchableOpacity
                         style={styles.secondaryButton}
@@ -643,11 +1129,52 @@ const NewDashboardScreen = () => {
                         </View>
 
                         <ScrollView style={styles.consentScroll} showsVerticalScrollIndicator={false}>
-                            <Text style={styles.consentText}>{CONSENT_TEXT}</Text>
+                            <Text style={styles.consentText}>{consentContent}</Text>
                         </ScrollView>
 
-                        <Text style={styles.signatureLabel}>{t('yourSignature')}</Text>
-                        <SignaturePad onSignedChange={setIsSigned} signatureRef={signatureRef} />
+                        <TouchableOpacity
+                            activeOpacity={0.7}
+                            onPress={() => {
+                                const newValue = !isAgreed;
+                                setIsAgreed(newValue);
+
+                                setShowSignaturePad(newValue);
+                                setIsSigned(false);
+
+                                if (!newValue) {
+                                    signatureRef.current?.clear();
+                                }
+                            }}
+                            style={styles.agreementTextContainer}
+                        >
+                            <View style={styles.agreementRow}>
+                                <View
+                                    style={[
+                                        styles.agreementTick,
+                                        isAgreed && styles.agreementTickSelected,
+                                    ]}
+                                >
+                                    {isAgreed && (
+                                        <Text style={styles.agreementTickText}>✓</Text>
+                                    )}
+                                </View>
+
+                                <Text style={styles.agreementText}>
+                                    I hereby agree to the above terms and conditions.
+                                </Text>
+                            </View>
+                        </TouchableOpacity>
+
+                        {showSignaturePad && (
+                            <>
+                                <Text style={styles.signatureLabel}>{t('yourSignature')}</Text>
+                                <SignaturePad
+                                    onSignedChange={setIsSigned}
+                                    signatureRef={signatureRef}
+                                    captureRef={signatureCaptureRef}
+                                />
+                            </>
+                        )}
 
                         <TouchableOpacity
                             style={[styles.modalPrimaryBtn, !isSigned && styles.modalPrimaryBtnDisabled]}
@@ -655,13 +1182,21 @@ const NewDashboardScreen = () => {
                             disabled={!isSigned}
                             activeOpacity={0.85}
                         >
-                            <Text style={styles.modalPrimaryBtnText}>{t('saveContinue')}</Text>
-                            <Image
-                                source={require('../../assets/arrow-forward.png')}
-                                style={{ height: 18, width: 18, tintColor: '#FFFFFF', marginLeft: 6 }}
-                                resizeMode="contain"
-                            />
+                            {savingConsent ? (
+                                <ActivityIndicator color="#FFFFFF" />
+                            ) : (
+                                <>
+                                    <Text style={styles.modalPrimaryBtnText}>{t('saveContinue')}</Text>
+                                    <Image
+                                        source={require('../../assets/arrow-forward.png')}
+                                        style={{ height: 18, width: 18, tintColor: '#FFFFFF', marginLeft: 6 }}
+                                        resizeMode="contain"
+                                    />
+                                </>
+                            )}
                         </TouchableOpacity>
+
+
                     </View>
                 </View>
             </Modal>
@@ -687,7 +1222,8 @@ const NewDashboardScreen = () => {
 
 
                             <Text style={styles.fieldLabel}>{t('activityDate')}</Text>
-                            <View style={styles.activityDateCard}>
+                            <TouchableOpacity style={styles.activityDateCard}
+                                onPress={openActivityCalendar}>
                                 <View style={styles.activityDateIconBg}>
                                     <Image
                                         source={require('../../assets/calendar.png')}
@@ -696,9 +1232,9 @@ const NewDashboardScreen = () => {
                                     />
                                 </View>
                                 <View style={{ flex: 1 }}>
-                                    <Text style={styles.activityDateLabel}>{t('today')}</Text>
+                                    
                                     <Text style={styles.activityDateValue}>
-                                        {new Date().toLocaleDateString('en-IN', {
+                                        {activityDate.toLocaleDateString('en-GB', {
                                             day: '2-digit',
                                             month: 'short',
                                             year: 'numeric',
@@ -711,9 +1247,9 @@ const NewDashboardScreen = () => {
                                         </Text>
                                     </View>
                                 </View>
-                            </View>
+                            </TouchableOpacity>
                             {/* Selfie */}
-                            <Text style={styles.fieldLabel}>{t('selfieVerification')}</Text>
+                            {/* <Text style={styles.fieldLabel}>{t('selfieVerification')}</Text>
                             <View style={styles.selfieCard}>
                                 <View style={styles.selfieCircle}>
                                     <Image
@@ -734,7 +1270,7 @@ const NewDashboardScreen = () => {
                                     />
                                     <Text style={styles.selfieBtnText}>{t('openCamera')}</Text>
                                 </TouchableOpacity>
-                            </View>
+                            </View> */}
 
                             {/* Current Location */}
                             <Text style={styles.fieldLabel}>{t('currentLocation')}</Text>
@@ -749,7 +1285,7 @@ const NewDashboardScreen = () => {
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.locationLabel}>{t('youAreHere')}</Text>
                                     <Text style={styles.locationAddress} numberOfLines={2}>
-                                        BP Block Sector V, Bidhannagar, Kolkata, West Bengal 700091
+                                        {isFetchingLocation ? 'Fetching location...' : location || 'Unable to fetch location'}
                                     </Text>
                                     <View style={styles.locationMetaRow}>
                                         <View style={styles.locationMetaDot} />
@@ -760,18 +1296,80 @@ const NewDashboardScreen = () => {
 
                             {/* Product Name */}
                             <Text style={styles.fieldLabel}>{t('productName')}</Text>
-                            <View style={styles.productNameBox}>
+                            <TouchableOpacity
+                                style={styles.productNameBox}
+                                activeOpacity={productDetails.length > 0 ? 0.7 : 1}
+                                onPress={() => {
+                                    if (productDetails.length > 0) {
+                                        setProductDropdownVisible(!productDropdownVisible);
+                                    }
+                                }}
+                            >
                                 <Image
                                     source={require('../../assets/cube-outline.png')}
                                     style={{ height: 18, width: 18, tintColor: '#047282' }}
                                     resizeMode="contain"
                                 />
-                                <Text style={styles.productNameText}>{productName}</Text>
-                            </View>
-                            <Text style={styles.summaryValue}>{t('rate')}: ₹{RATE_PER_UNIT} / unit</Text>
+
+                                <Text style={styles.productNameText} numberOfLines={2}>
+                                    {selectedProduct?.Name || 'No product available'}
+                                </Text>
+
+                                {productDetails.length > 0 && (
+                                    <Text style={styles.productDropdownIcon}>
+                                        {productDropdownVisible ? '▲' : '▼'}
+                                    </Text>
+                                )}
+                            </TouchableOpacity>
+
+                            {/* Product Dropdown */}
+                            {productDropdownVisible && productDetails.length > 0 && (
+                                <View style={styles.productDropdown}>
+                                    {productDetails.map((item, index) => (
+                                        <TouchableOpacity
+                                            key={`${item.SL_Id}_${item.Code}_${index}`}
+                                            style={[
+                                                styles.productDropdownItem,
+                                                selectedProduct?.SL_Id === item.SL_Id &&
+                                                styles.selectedProductItem,
+                                            ]}
+                                            onPress={() => {
+                                                setSelectedProduct(item);
+                                                setProductDropdownVisible(false);
+                                                setQuantity('');
+                                            }}
+                                        >
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={styles.dropdownProductName}>
+                                                    {item.Name}
+                                                </Text>
+
+                                                <Text style={styles.dropdownProductUnit}>
+                                                    Unit: {item.UnitType || '-'}
+                                                </Text>
+
+                                                <Text style={styles.dropdownProductRate}>
+                                                    Rate: ₹{Number(item.Rate || 0).toFixed(2)} / unit
+                                                </Text>
+                                            </View>
+
+                                            {selectedProduct?.SL_Id === item.SL_Id && (
+                                                <Text style={styles.productSelectedIcon}>✓</Text>
+                                            )}
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
+
+                            {selectedProduct && (
+                                <Text style={styles.summaryValue}>
+                                    Rate: ₹{ratePerUnit.toFixed(2)} / unit
+                                </Text>
+                            )}
+
 
                             {/* Quantity */}
-                            <Text style={styles.fieldLabel}>{t('value')}</Text>
+                            <Text style={styles.fieldLabel}> {selectedProduct?.UnitType || 'Unit'}</Text>
                             <View style={styles.inputRow}>
                                 <TextInput
                                     style={styles.input}
@@ -791,11 +1389,11 @@ const NewDashboardScreen = () => {
                                 </View>
                                 <View style={styles.summaryRow}>
                                     <Text style={styles.summaryLabel}>{t('rate')}</Text>
-                                    <Text style={styles.summaryValue}>₹ {RATE_PER_UNIT} / unit</Text>
+                                    <Text style={styles.summaryValue}>₹ {ratePerUnit.toFixed(2)} / unit</Text>
                                 </View>
                                 <View style={[styles.summaryRow, styles.summaryTotalRow]}>
                                     <Text style={styles.summaryTotalLabel}>{t('total')}</Text>
-                                    <Text style={styles.summaryTotalValue}>₹ {rate}</Text>
+                                    <Text style={styles.summaryTotalValue}>₹ {totalAmount.toFixed(2)}</Text>
                                 </View>
                             </View>
                         </ScrollView>
@@ -806,12 +1404,19 @@ const NewDashboardScreen = () => {
                             disabled={!quantity}
                             activeOpacity={0.85}
                         >
-                            <Text style={styles.modalPrimaryBtnText}>{t('save')}</Text>
-                            <Image
-                                source={require('../../assets/checkmark.png')}
-                                style={{ height: 18, width: 18, tintColor: '#FFFFFF', marginLeft: 6 }}
-                                resizeMode="contain"
-                            />
+
+                            {savingProduct ? (
+                                <ActivityIndicator color="#FFFFFF" />
+                            ) : (
+                                <>
+                                    <Text style={styles.modalPrimaryBtnText}>{t('save')}</Text>
+                                    <Image
+                                        source={require('../../assets/checkmark.png')}
+                                        style={{ height: 18, width: 18, tintColor: '#FFFFFF', marginLeft: 6 }}
+                                        resizeMode="contain"
+                                    />
+                                </>
+                            )}
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -895,6 +1500,105 @@ const NewDashboardScreen = () => {
                         })}
                     </View>
                 </TouchableOpacity>
+            </Modal>
+
+            <Modal
+                visible={showActivityDateModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowActivityDateModal(false)}
+            >
+                <View style={styles.dateOverlay}>
+                    <View style={styles.dateContainer}>
+
+                        {/* Header */}
+                        <View style={styles.dateHeader}>
+                            <Text style={styles.dateTitle}>Select Activity Date</Text>
+
+                            <TouchableOpacity
+                                onPress={() => setShowActivityDateModal(false)}
+                            >
+                                <Text style={{ fontSize: 22, color: '#555' }}>×</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Month navigation */}
+                        <View style={styles.monthHeader}>
+                            <TouchableOpacity onPress={() => changeMonth(-1)}>
+                                <Text style={styles.monthArrow}>‹</Text>
+                            </TouchableOpacity>
+
+                            <Text style={styles.monthTitle}>
+                                {calendarMonth.toLocaleDateString('en-US', {
+                                    month: 'long',
+                                    year: 'numeric',
+                                })}
+                            </Text>
+
+                            <TouchableOpacity
+                                disabled={
+                                    calendarMonth.getFullYear() === new Date().getFullYear() &&
+                                    calendarMonth.getMonth() === new Date().getMonth()
+                                }
+                                onPress={() => changeMonth(1)}
+                            >
+                                <Text style={styles.monthArrow}>›</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Week days */}
+                        <View style={styles.weekRow}>
+                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                                <Text key={day} style={styles.weekText}>{day}</Text>
+                            ))}
+                        </View>
+
+                        {/* Dates */}
+                        <View style={styles.daysContainer}>
+                            {getCalendarDays().map((date, index) => {
+                                if (!date) {
+                                    return <View key={`empty-${index}`} style={styles.dayBox} />;
+                                }
+
+                                const selected =
+                                    date.toDateString() === activityDate.toDateString();
+
+                                const disabled = isFutureDate(date);
+
+                                return (
+                                    <TouchableOpacity
+                                        key={index}
+                                        disabled={disabled}
+                                        style={[
+                                            styles.dayBox,
+                                            selected && styles.selectedDay,
+                                        ]}
+                                        onPress={() => {
+                                            setActivityDate(date);
+                                            setShowActivityDateModal(false);
+                                        }}
+                                    >
+                                        <Text style={[
+                                            styles.dayText,
+                                            disabled && { color: '#D0D0D0' },
+                                            selected && { color: '#FFFFFF' },
+                                        ]}>
+                                            {date.getDate()}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+
+                        <TouchableOpacity
+                            style={styles.closeDateButton}
+                            onPress={() => setShowActivityDateModal(false)}
+                        >
+                            <Text style={styles.closeDateText}>Cancel</Text>
+                        </TouchableOpacity>
+
+                    </View>
+                </View>
             </Modal>
         </View>
     );
@@ -1242,6 +1946,255 @@ const styles = StyleSheet.create({
         fontFamily: 'InstrumentSans-Regular',
         fontSize: 11,
         color: '#6B7A7C',
+    },
+
+    productDropdownIcon: {
+        marginLeft: 'auto',
+        fontSize: 13,
+        color: '#047282',
+        fontWeight: 'bold',
+    },
+
+    productDropdown: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#D4E9EC',
+        marginTop: 6,
+        overflow: 'hidden',
+    },
+
+    productDropdownItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: '#EAF1F2',
+    },
+
+    selectedProductItem: {
+        backgroundColor: '#EAF5F6',
+    },
+
+    dropdownProductName: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#047282',
+        fontFamily: 'InstrumentSans-Bold',
+    },
+
+    dropdownProductUnit: {
+        fontSize: 12,
+        color: '#6B7A7C',
+        marginTop: 4,
+    },
+
+    dropdownProductRate: {
+        fontSize: 12,
+        color: '#0A2E33',
+        fontWeight: '600',
+        marginTop: 3,
+    },
+
+    productSelectedIcon: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#047282',
+        marginLeft: 10,
+    },
+
+    dateModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+
+    dateModalContainer: {
+        width: '100%',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 16,
+    },
+
+    dateModalTitle: {
+        fontSize: 17,
+        fontWeight: '700',
+        color: '#153C40',
+        marginBottom: 15,
+    },
+
+    dateCancelButton: {
+        alignSelf: 'flex-end',
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+    },
+
+    dateCancelText: {
+        color: '#047282',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+
+    dateOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+
+    dateContainer: {
+        width: '100%',
+        maxWidth: 380,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 18,
+    },
+
+    dateHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+
+    dateTitle: {
+        fontSize: 17,
+        fontWeight: '700',
+        color: '#153C40',
+    },
+
+    monthHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+
+    monthArrow: {
+        fontSize: 30,
+        color: '#047282',
+        paddingHorizontal: 12,
+    },
+
+    monthTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#153C40',
+    },
+
+    weekRow: {
+        flexDirection: 'row',
+        marginBottom: 10,
+    },
+
+    weekText: {
+        width: '14.28%',
+        textAlign: 'center',
+        fontSize: 12,
+        color: '#89999B',
+        fontWeight: '600',
+    },
+
+    daysContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+    },
+
+    dayBox: {
+        width: '14.28%',
+        height: 42,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 22,
+        marginBottom: 4,
+    },
+
+    dayText: {
+        fontSize: 14,
+        color: '#253F42',
+    },
+
+    selectedDay: {
+        backgroundColor: '#047282',
+    },
+
+    closeDateButton: {
+        alignSelf: 'flex-end',
+        padding: 10,
+        marginTop: 10,
+    },
+
+    closeDateText: {
+        color: '#047282',
+        fontWeight: '700',
+        fontSize: 14,
+    },
+
+
+    agreementTextContainer: {
+        marginTop: 12,
+        marginBottom: 12,
+        paddingVertical: 12,
+        paddingHorizontal: 14,
+        backgroundColor: '#EAF5F6',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#B8DDE1',
+    },
+
+    agreementRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+
+    agreementTick: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#22A06B',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
+    },
+
+    agreementTickText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+
+    agreementText: {
+        flex: 1,
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#047282',
+    },
+
+    agreementTick: {
+        width: 24,
+        height: 24,
+        borderRadius: 6,
+        borderWidth: 1.5,
+        borderColor: '#9AAEB0',
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
+    },
+
+    agreementTickSelected: {
+        backgroundColor: '#22A06B',
+        borderColor: '#22A06B',
+    },
+
+    agreementTickText: {
+        color: '#FFFFFF',
+        fontSize: 17,
+        fontWeight: 'bold',
     },
 });
 

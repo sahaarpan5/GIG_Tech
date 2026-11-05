@@ -17,6 +17,10 @@ const API = {
   CONSENT: `${BASE_URL_V2}/Gig/Consent`,
   GIG_VIEW: `${BASE_URL_V2}/Gig/View`,
 
+  GIG_WORKER_ACTIVITY_SAVE: `${BASE_URL_V2}/Gig/WorkerActivitySave`,
+
+   WORKER_DETAILS: `${BASE_URL_V2}/Gig/WorkerDetails`,
+
 };
 
 // Add more endpoints here as needed

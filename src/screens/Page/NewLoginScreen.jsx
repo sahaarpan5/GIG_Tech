@@ -346,6 +346,9 @@ const NewLoginScreen = () => {
     const [dpdpVisible, setDpdpVisible] = useState(false);
     const [isDpdpSigned, setIsDpdpSigned] = useState(false);
 
+    const [isAgreed, setIsAgreed] = useState(false);
+    const [showSignaturePad, setShowSignaturePad] = useState(false);
+
     const t = (key) =>
         LOGIN_TRANSLATIONS[selectedLanguage]?.[key] ??
         LOGIN_TRANSLATIONS.English[key] ??
@@ -549,8 +552,8 @@ const NewLoginScreen = () => {
 
                 // Open DPDP consent if not already accepted
                 if (Number(userData.Concent_Accepted) === 0) {
-                 //  openDpdpConsent();
-                 navigation.replace('NewDashboardScreen');
+                    openDpdpConsent();
+                    // navigation.replace('NewDashboardScreen');
                 } else {
                     navigation.replace('NewDashboardScreen');
                 }
@@ -730,15 +733,16 @@ const NewLoginScreen = () => {
 
             // Consent API payload
             const payload = {
-                Op: 2,
+                Op: 1,
                 Worker_PayrollCode: userData.Worker_PayrollCode,
                 ConsentId: userData.ConsentId,
                 ConsentSignature: signatureBase64,
+                Ip: ""
             };
 
             console.log('Consent Payload:', {
                 ...payload,
-                ConsentSignature: 'Base64 signature captured',
+                ConsentSignature: signatureBase64,
             });
 
             const response = await axios.post(
@@ -1215,12 +1219,51 @@ const NewLoginScreen = () => {
                             <Text style={styles.dpdpText}>{consentContent}</Text>
                         </ScrollView>
 
-                        <Text style={styles.signatureLabel}>{t('yourSignature')}</Text>
-                        <SignaturePad
-                            signatureRef={signatureRef}
-                            onSignedChange={setIsDpdpSigned}
-                            placeholder={t('signHere')}
-                        />
+
+                        <TouchableOpacity
+                            activeOpacity={0.7}
+                            onPress={() => {
+                                const newValue = !isAgreed;
+                                setIsAgreed(newValue);
+
+                                setShowSignaturePad(newValue);
+                                setIsDpdpSigned(false);
+
+                                if (!newValue) {
+                                    signatureRef.current?.clear();
+                                }
+                            }}
+                            style={styles.agreementTextContainer}
+                        >
+                            <View style={styles.agreementRow}>
+                                <View
+                                    style={[
+                                        styles.agreementTick,
+                                        isAgreed && styles.agreementTickSelected,
+                                    ]}
+                                >
+                                    {isAgreed && (
+                                        <Text style={styles.agreementTickText}>✓</Text>
+                                    )}
+                                </View>
+
+                                <Text style={styles.agreementText}>
+                                    I hereby agree to the above terms and conditions.
+                                </Text>
+                            </View>
+                        </TouchableOpacity>
+
+                        {showSignaturePad && (
+                            <>
+
+                                <Text style={styles.signatureLabel}>{t('yourSignature')}</Text>
+                                <SignaturePad
+                                    signatureRef={signatureRef}
+                                    onSignedChange={setIsDpdpSigned}
+                                    placeholder={t('signHere')}
+                                />
+                            </>
+                        )}
 
                         <TouchableOpacity
                             style={[
@@ -1817,6 +1860,68 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#FFFFFF',
         letterSpacing: 0.2,
+    },
+     agreementTextContainer: {
+        marginTop: 12,
+        marginBottom: 12,
+        paddingVertical: 12,
+        paddingHorizontal: 14,
+        backgroundColor: '#EAF5F6',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#B8DDE1',
+    },
+
+    agreementRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+
+    agreementTick: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#22A06B',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
+    },
+
+    agreementTickText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+
+    agreementText: {
+        flex: 1,
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#047282',
+    },
+
+    agreementTick: {
+        width: 24,
+        height: 24,
+        borderRadius: 6,
+        borderWidth: 1.5,
+        borderColor: '#9AAEB0',
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
+    },
+
+    agreementTickSelected: {
+        backgroundColor: '#22A06B',
+        borderColor: '#22A06B',
+    },
+
+    agreementTickText: {
+        color: '#FFFFFF',
+        fontSize: 17,
+        fontWeight: 'bold',
     },
 });
 
