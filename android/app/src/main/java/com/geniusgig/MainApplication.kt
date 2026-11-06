@@ -42,13 +42,13 @@ class MainApplication : Application(), ReactApplication {
   override fun onCreate() {
     super.onCreate()
 
-    if (BuildConfig.DEBUG) {
+    
         OkHttpClientProvider.setOkHttpClientFactory(
             OkHttpClientFactory {
                 getUnsafeOkHttpClient()
             }
         )
-    }
+    
     SoLoader.init(this, OpenSourceMergedSoMapping)
     if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
       // If you opted-in for the New Architecture, we load the native entry point for this app.

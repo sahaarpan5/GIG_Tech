@@ -74,7 +74,7 @@ const TRANSLATIONS = {
         startActivity: 'Start Activity',
         activityReport: 'Activity Report',
         myEarnings: 'My Earnings',
-        profileStatus: 'Profile Status',
+        profileStatus: 'My profile',
         profileIncomplete: 'Profile incomplete',
         profileComplete: 'Profile complete',
         viewProfile: 'View Profile',
@@ -113,7 +113,7 @@ const TRANSLATIONS = {
     Bengali: {
         greeting: 'সুপ্রভাত, Rahul 👋', subtitle: 'আজকের কাজের বিবরণ', chooseLanguage: 'ভাষা নির্বাচন করুন',
         activeSL: 'সক্রিয় সার্ভিস লোকেশন', slLocation: 'সার্ভিস লোকেশন', assignedDate: 'নির্ধারিত তারিখ', startDate: 'শুরুর তারিখ', endDate: 'শেষ তারিখ',
-        startActivity: 'কাজ শুরু করুন', activityReport: 'কাজের রিপোর্ট', myEarnings: 'আমার উপার্জন', profileStatus: 'প্রোফাইলের অবস্থা',
+        startActivity: 'কাজ শুরু করুন', activityReport: 'কাজের রিপোর্ট', myEarnings: 'আমার উপার্জন', profileStatus: 'আমার প্রোফাইল',
         profileIncomplete: 'প্রোফাইল অসম্পূর্ণ', profileComplete: 'প্রোফাইল সম্পূর্ণ', viewProfile: 'প্রোফাইল দেখুন',
         consentTitle: 'সম্মতি ও চুক্তি', yourSignature: 'আপনার স্বাক্ষর', signHere: 'এখানে আঙুল দিয়ে স্বাক্ষর করুন', clearSignature: 'স্বাক্ষর মুছে ফেলুন', saveContinue: 'সংরক্ষণ করুন ও এগিয়ে যান',
         activityDetails: 'কাজের বিবরণ লিখুন', selfieVerification: 'সেলফি যাচাইকরণ', takeSelfie: 'সেলফি তুলুন', selfieInstruction: 'আপনার মুখ স্পষ্টভাবে দেখা যাচ্ছে কিনা নিশ্চিত করুন', openCamera: 'ক্যামেরা খুলুন',
@@ -129,7 +129,7 @@ const TRANSLATIONS = {
     Hindi: {
         greeting: 'सुप्रभात, Rahul 👋', subtitle: 'आज के काम का विवरण', chooseLanguage: 'भाषा चुनें',
         activeSL: 'सक्रिय सर्विस लोकेशन', slLocation: 'सर्विस लोकेशन', assignedDate: 'निर्धारित तिथि', startDate: 'शुरू होने की तिथि', endDate: 'समाप्ति तिथि',
-        startActivity: 'काम शुरू करें', activityReport: 'कार्य रिपोर्ट', myEarnings: 'मेरी कमाई', profileStatus: 'प्रोफ़ाइल की स्थिति',
+        startActivity: 'काम शुरू करें', activityReport: 'कार्य रिपोर्ट', myEarnings: 'मेरी कमाई', profileStatus: 'मेरी प्रोफाइल',
         profileIncomplete: 'प्रोफ़ाइल अधूरी है', profileComplete: 'प्रोफ़ाइल पूरी है', viewProfile: 'प्रोफ़ाइल देखें',
         consentTitle: 'सहमति और अनुबंध', yourSignature: 'आपके हस्ताक्षर', signHere: 'यहाँ उँगली से हस्ताक्षर करें', clearSignature: 'हस्ताक्षर मिटाएँ', saveContinue: 'सहेजें और आगे बढ़ें',
         activityDetails: 'कार्य का विवरण दर्ज करें', selfieVerification: 'सेल्फी सत्यापन', takeSelfie: 'सेल्फी लें', selfieInstruction: 'सुनिश्चित करें कि आपका चेहरा स्पष्ट दिखाई दे', openCamera: 'कैमरा खोलें',
