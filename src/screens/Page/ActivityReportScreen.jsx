@@ -10,77 +10,14 @@ import {
     Platform,
     TextInput,
     Modal,
+    ActivityIndicator
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import API from '../../util/API';
 
 /* ------- Sample data (replace with API) ------- */
-const ACTIVITY_DATA = [
-    {
-        id: '1',
-        ClientName: 'SHYAMOLI PARIBAHAN PRIVATE LIMITED',
-        ClientOfficeName: 'SHYAMOLI - KOLKATA',
-        PositionName: 'DRIVER',
-        ProductName: 'TRIP',
-        Product_UnitName: 'Unite',
-        Unite_Rate: 500.0,
-        Unit_Value: 1.0,
-        Total_Amount: 500.0,
-        ActivityDate: '2026-11-02T00:00:00',
-        CreatedDate: '2026-11-05T13:21:23.817',
-    },
-    {
-        id: '2',
-        ClientName: 'SHYAMOLI PARIBAHAN PRIVATE LIMITED',
-        ClientOfficeName: 'SHYAMOLI - KOLKATA',
-        PositionName: 'DRIVER',
-        ProductName: 'TRIP',
-        Product_UnitName: 'Unite',
-        Unite_Rate: 500.0,
-        Unit_Value: 3.0,
-        Total_Amount: 1500.0,
-        ActivityDate: '2026-11-01T00:00:00',
-        CreatedDate: '2026-11-04T10:15:12.123',
-    },
-    {
-        id: '3',
-        ClientName: 'SHYAMOLI PARIBAHAN PRIVATE LIMITED',
-        ClientOfficeName: 'SHYAMOLI - KOLKATA',
-        PositionName: 'HELPER',
-        ProductName: 'TRIP',
-        Product_UnitName: 'Unite',
-        Unite_Rate: 350.0,
-        Unit_Value: 2.0,
-        Total_Amount: 700.0,
-        ActivityDate: '2026-10-31T00:00:00',
-        CreatedDate: '2026-11-03T08:45:33.456',
-    },
-    {
-        id: '4',
-        ClientName: 'SHYAMOLI PARIBAHAN PRIVATE LIMITED',
-        ClientOfficeName: 'SHYAMOLI - KOLKATA',
-        PositionName: 'DRIVER',
-        ProductName: 'TRIP',
-        Product_UnitName: 'Unite',
-        Unite_Rate: 500.0,
-        Unit_Value: 2.0,
-        Total_Amount: 1000.0,
-        ActivityDate: '2026-10-30T00:00:00',
-        CreatedDate: '2026-11-02T14:22:07.789',
-    },
-    {
-        id: '5',
-        ClientName: 'SHYAMOLI PARIBAHAN PRIVATE LIMITED',
-        ClientOfficeName: 'SHYAMOLI - KOLKATA',
-        PositionName: 'HELPER',
-        ProductName: 'TRIP',
-        Product_UnitName: 'Unite',
-        Unite_Rate: 350.0,
-        Unit_Value: 4.0,
-        Total_Amount: 1400.0,
-        ActivityDate: '2026-10-29T00:00:00',
-        CreatedDate: '2026-11-01T09:11:50.234',
-    },
-];
+
 
 const REPORT_TRANSLATIONS = {
     English: {
@@ -179,6 +116,9 @@ const ActivityReportScreen = ({ navigation }) => {
     const [alertVisible, setAlertVisible] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
 
+    const [activityData, setActivityData] = useState([]);
+    const [loading, setLoading] = useState(false);
+
     const t = (key) =>
         REPORT_TRANSLATIONS[selectedLanguage]?.[key] ??
         REPORT_TRANSLATIONS.English[key] ??
@@ -186,12 +126,14 @@ const ActivityReportScreen = ({ navigation }) => {
 
     /* Filtered data based on date range */
     const filteredData = showData
-        ? ACTIVITY_DATA.filter((item) => {
+        ? activityData.filter((item) => {
             if (!startDate || !endDate) return true;
+
             const activity = new Date(item.ActivityDate).getTime();
-            const start = new Date(startDate).getTime();
-            const end = new Date(endDate).getTime();
-            return activity >= start && activity <= end + 86399999; // include full end day
+            const start = new Date(`${startDate}T00:00:00`).getTime();
+            const end = new Date(`${endDate}T00:00:00`).getTime();
+
+            return activity >= start && activity <= end + 86399999;
         })
         : [];
 
@@ -211,6 +153,95 @@ const ActivityReportScreen = ({ navigation }) => {
         };
         loadLanguage();
     }, []);
+
+
+
+
+    const fetchActivityData = async (fromDate = startDate, toDate = endDate) => {
+        try {
+            setLoading(true);
+
+            const token = await AsyncStorage.getItem('accessToken');
+            const payrollCode = await AsyncStorage.getItem('workerPayrollCode');
+
+            if (!token || !payrollCode) {
+                setActivityData([]);
+                setShowData(true);
+                setAlertMessage('Login token or worker payroll code not found.');
+                setAlertVisible(true);
+                return;
+            }
+
+            const payload = {
+                Op: 1,
+                Worker_PayrollCode: payrollCode,
+                FromDate: fromDate,
+                ToDate: toDate,
+                Sl: '',
+            };
+            console.log('Activity Report Payload:', payload);
+
+            const response = await axios.post(
+                API.WORKER_DETAILS,
+                payload,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    timeout: 30000,
+                }
+            );
+
+            if (response.data?.Status === true) {
+                const apiData = response.data.Data;
+
+                // API may return one object or an array of records
+                const records = Array.isArray(apiData)
+                    ? apiData
+                    : apiData
+                        ? [apiData]
+                        : [];
+
+                const mappedData = records.map((item, index) => ({
+                    ...item,
+                    id: String(item.Sl || index + 1),
+                    Unite_Rate: Number(item.Unite_Rate) || 0,
+                    Unit_Value: Number(item.Unit_Value) || 0,
+                    Total_Amount: Number(item.Total_Amount) || 0,
+                }));
+
+                setActivityData(mappedData);
+                setShowData(true);
+            } else {
+                setActivityData([]);
+                setShowData(true);
+
+                setAlertMessage(
+                    response.data?.Message || 'Unable to fetch activity details.'
+                );
+                setAlertVisible(true);
+            }
+
+        } catch (error) {
+            console.log(
+                'Activity Report API Error:',
+                error.response?.data || error.message
+            );
+
+            setActivityData([]);
+            setShowData(true);
+
+            setAlertMessage(
+                error.response?.data?.Message ||
+                'Something went wrong while fetching activities.'
+            );
+            setAlertVisible(true);
+
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const getCurrentMonthDateRange = () => {
         const today = new Date();
@@ -244,19 +275,23 @@ const ActivityReportScreen = ({ navigation }) => {
             setAlertVisible(true);
             return;
         }
-        const s = new Date(startDate).getTime();
-        const e = new Date(endDate).getTime();
+
+        const s = new Date(`${startDate}T00:00:00`).getTime();
+        const e = new Date(`${endDate}T00:00:00`).getTime();
+
         if (isNaN(s) || isNaN(e)) {
             setAlertMessage(t('dateRequired'));
             setAlertVisible(true);
             return;
         }
+
         if (s > e) {
             setAlertMessage(t('invalidRange'));
             setAlertVisible(true);
             return;
         }
-        setShowData(true);
+
+        fetchActivityData(startDate, endDate);
     };
 
     /* ---------- Card renderer ---------- */
@@ -518,7 +553,7 @@ const ActivityReportScreen = ({ navigation }) => {
             {showData ? (
                 <FlatList
                     data={filteredData}
-                    keyExtractor={(item) => item.id}
+                    keyExtractor={(item, index) => String(item.id || index)}
                     renderItem={renderItem}
                     contentContainerStyle={styles.listContent}
                     showsVerticalScrollIndicator={false}
@@ -686,6 +721,17 @@ const ActivityReportScreen = ({ navigation }) => {
                     </View>
                 </View>
             </Modal>
+
+            {loading && (
+                <View style={styles.loaderOverlay}>
+                    <View style={styles.loaderBox}>
+                        <ActivityIndicator size="large" color="#047282" />
+                        <Text style={styles.loaderText}>
+                            Loading activities...
+                        </Text>
+                    </View>
+                </View>
+            )}
         </View>
     );
 };
@@ -1138,6 +1184,31 @@ const styles = StyleSheet.create({
         fontFamily: 'InstrumentSans-Bold',
         fontSize: 14,
         color: '#047282',
+    },
+
+    loaderOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(10,46,51,0.35)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 999,
+        elevation: 20,
+    },
+
+    loaderBox: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        paddingHorizontal: 30,
+        paddingVertical: 24,
+        alignItems: 'center',
+        minWidth: 160,
+    },
+
+    loaderText: {
+        fontFamily: 'InstrumentSans-Bold',
+        fontSize: 13,
+        color: '#0A2E33',
+        marginTop: 12,
     },
 });
 

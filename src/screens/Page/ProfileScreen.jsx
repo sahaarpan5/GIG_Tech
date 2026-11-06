@@ -170,6 +170,8 @@ const ProfileScreen = () => {
         relationship,
     } = profile;
 
+    const [documentZoom, setDocumentZoom] = useState(1);
+
     const [profileLoading, setProfileLoading] = useState(false);
 
     const [selectedLanguage, setSelectedLanguage] = useState('English');
@@ -205,6 +207,19 @@ const ProfileScreen = () => {
     };
 
 
+    const handleZoomIn = () => {
+        setDocumentZoom(prev => Math.min(prev + 0.25, 3));
+    };
+
+    const handleZoomOut = () => {
+        setDocumentZoom(prev => Math.max(prev - 0.25, 1));
+    };
+
+    const resetZoom = () => {
+        setDocumentZoom(1);
+    };
+
+
 
     /* Fetch Worker Details API */
     const fetchWorkerDetails = async () => {
@@ -233,8 +248,8 @@ const ProfileScreen = () => {
             const payload = {
                 Op: 3,
                 Worker_PayrollCode: payrollCode,
-                FromDate: `${today.getFullYear()}-01-01`,
-                ToDate: toDate,
+                FromDate: `2026-01-01`,
+                ToDate: '2026-11-05',
                 Sl: '',
             };
 
@@ -259,9 +274,10 @@ const ProfileScreen = () => {
 
             if (
                 response.data?.Status === true &&
-                response.data?.Data
+                Array.isArray(response.data?.Data) &&
+                response.data.Data.length > 0
             ) {
-                const data = response.data.Data;
+                const data = response.data.Data[0];
 
                 setProfile({
                     name: data.Worker_Name?.trim() || '',
@@ -269,26 +285,51 @@ const ProfileScreen = () => {
                     email: data.EmailID || '',
                     gender: data.GenderName || '',
                     location: data.Location || '',
+
                     guardianName: data.GuardianName || '',
                     relationship: data.RelationShip || '',
+
                     dob: formatDOB(data.DateOfBirth),
                     qualification: data.Qualification || '',
+
                     aadhaarNo: data.AADHARNo || '',
                     panNo: data.ITMPanNo || '',
-                    bankName: data.BankAccountHolderName || '',
+
+                    bankName: data.Worker_Name?.trim() || '',
                     accountNo: data.AccountNumber || '',
                     ifsc: data.IFSC || '',
+
                     aadhaarFile: data.AadharFile_Path || '',
                     panFile: data.PANFile_Path || '',
                     bankFile: data.BankFile_Path || '',
                 });
             } else {
+                setProfile({
+                    name: '',
+                    mobile: '',
+                    email: '',
+                    gender: '',
+                    location: '',
+                    dob: '',
+                    qualification: '',
+                    aadhaarNo: '',
+                    panNo: '',
+                    bankName: '',
+                    accountNo: '',
+                    ifsc: '',
+                    aadhaarFile: '',
+                    panFile: '',
+                    bankFile: '',
+                    guardianName: '',
+                    relationship: '',
+                });
+
                 Alert.alert(
                     'Failed',
-                    response.data?.Message ||
-                    'Unable to fetch worker details.'
+                    response.data?.Message || 'Unable to fetch worker details.'
                 );
             }
+
         } catch (error) {
             console.log(
                 'Worker Details API Error:',
@@ -320,6 +361,7 @@ const ProfileScreen = () => {
                 uri: profile.bankFile,
             },
         };
+        setDocumentZoom(1);
 
         setSelectedDoc(documents[docKey]);
         setDocModalVisible(true);
@@ -328,6 +370,7 @@ const ProfileScreen = () => {
     const closeDocument = () => {
         setDocModalVisible(false);
         setSelectedDoc(null);
+        setDocumentZoom(1);
     };
 
     const handleChangeRequest = () => {
@@ -666,7 +709,12 @@ const ProfileScreen = () => {
                             {selectedDoc?.uri ? (
                                 <Image
                                     source={{ uri: selectedDoc.uri }}
-                                    style={styles.docImage}
+                                    style={[
+                                        styles.docImage,
+                                        {
+                                            transform: [{ scale: documentZoom }],
+                                        },
+                                    ]}
                                     resizeMode="contain"
                                 />
                             ) : (
@@ -687,6 +735,34 @@ const ProfileScreen = () => {
                                 </View>
                             )}
                         </View>
+
+                        {/* Zoom Controls */}
+                        {selectedDoc?.uri && (
+                            <View style={styles.zoomControls}>
+                                <TouchableOpacity
+                                    style={styles.zoomButton}
+                                    onPress={handleZoomOut}
+                                    disabled={documentZoom <= 1}
+                                >
+                                    <Text style={styles.zoomButtonText}>−</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={styles.zoomResetButton}
+                                    onPress={resetZoom}
+                                >
+                                    <Text style={styles.zoomResetText}>Reset</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={styles.zoomButton}
+                                    onPress={handleZoomIn}
+                                    disabled={documentZoom >= 3}
+                                >
+                                    <Text style={styles.zoomButtonText}>+</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
 
                         {/* Document meta chip */}
                         <View style={styles.docMetaRow}>
@@ -1254,6 +1330,44 @@ const styles = StyleSheet.create({
         width: 20,
         height: 20,
         tintColor: '#FFFFFF',
+    },
+
+    zoomControls: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 14,
+        gap: 14,
+    },
+
+    zoomButton: {
+        width: 40,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: '#EAF5F6',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    zoomButtonText: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#047282',
+    },
+
+    zoomResetButton: {
+        paddingHorizontal: 18,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: '#047282',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    zoomResetText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#FFFFFF',
     },
 });
 

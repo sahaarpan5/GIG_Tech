@@ -21,6 +21,8 @@ const API = {
 
    WORKER_DETAILS: `${BASE_URL_V2}/Gig/WorkerDetails`,
 
+   
+
 };
 
 // Add more endpoints here as needed
