@@ -178,6 +178,7 @@ const MyEarningsScreen = ({ navigation }) => {
                 console.log('Error loading language:', error);
             }
         };
+        fetchDisbursements();
         loadLanguage();
     }, []);
 

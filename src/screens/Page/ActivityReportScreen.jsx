@@ -151,8 +151,14 @@ const ActivityReportScreen = ({ navigation }) => {
                 console.log('Error loading saved language:', error);
             }
         };
+
+        fetchActivityData(startDate, endDate);
         loadLanguage();
     }, []);
+
+
+
+
 
 
 
