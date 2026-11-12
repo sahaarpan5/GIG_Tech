@@ -22,6 +22,7 @@ import { captureRef } from 'react-native-view-shot';
 
 import axios from 'axios';
 import API from '../../util/API';
+import notifee, { AndroidImportance } from '@notifee/react-native';
 
 const HERO_IMAGE =
     'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&q=80&auto=format&fit=crop';
@@ -368,6 +369,27 @@ const NewLoginScreen = () => {
         loadLanguage();
     }, []);
 
+
+    useEffect(() => {
+        const requestPermission = async () => {
+            try {
+                const settings = await notifee.requestPermission();
+
+                const isGranted = settings.authorizationStatus >= 1;
+
+                console.log(
+                    'Notification Permission:',
+                    isGranted ? 'Granted' : 'Denied'
+                );
+
+            } catch (error) {
+                console.log('Notification Permission Error:', error);
+            }
+        };
+
+        requestPermission();
+    }, []);
+
     const handleLanguageChange = async (language) => {
         setSelectedLanguage(language);
         try {
@@ -417,11 +439,14 @@ const NewLoginScreen = () => {
 
             if (response.data?.Data?.Status === 1) {
                 setOtpSent(true);
+                const generatedOtp = String(
+                    response.data?.Data?.OTP || ''
+                ).trim();
                 setOtp(['', '', '', '']);
+                await showOtpNotification(generatedOtp);
 
                 Alert.alert(
-                    'Success',
-                    response.data?.Data?.OTP || 'OTP generated successfully'
+                    'OTP generated successfully'
                 );
             } else {
                 Alert.alert(
@@ -439,6 +464,56 @@ const NewLoginScreen = () => {
             );
         } finally {
             setOtpLoading(false);
+        }
+    };
+
+
+    const showOtpNotification = async (otpValue) => {
+        try {
+            // Request notification permission
+            await notifee.requestPermission();
+
+            let notificationConfig = {};
+
+            if (Platform.OS === 'android') {
+                // Create Android notification channel
+                const channelId = await notifee.createChannel({
+                    id: 'otp-notification',
+                    name: 'OTP Notifications',
+                    importance: AndroidImportance.HIGH,
+                    sound: 'default',
+                });
+
+                notificationConfig = {
+                    android: {
+                        channelId,
+                        pressAction: {
+                            id: 'default',
+                        },
+                    },
+                };
+            } else if (Platform.OS === 'ios') {
+                notificationConfig = {
+                    ios: {
+                        sound: 'default',
+                        foregroundPresentationOptions: {
+                            alert: true,
+                            badge: false,
+                            sound: true,
+                        },
+                    },
+                };
+            }
+
+            // Display native system notification
+            await notifee.displayNotification({
+                title: 'Login OTP',
+                body: `Your OTP is ${otpValue}. Do not share it with anyone.`,
+                ...notificationConfig,
+            });
+
+        } catch (error) {
+            console.log('OTP Notification Error:', error);
         }
     };
 
@@ -1095,16 +1170,16 @@ const NewLoginScreen = () => {
                     )}
 
                     {/* Divider */}
-                    <View style={styles.divider}>
+                    {/* <View style={styles.divider}>
                         <View style={styles.dividerLine} />
                         <View style={styles.dividerPill}>
                             <Text style={styles.dividerText}>{t('or')}</Text>
                         </View>
                         <View style={styles.dividerLine} />
-                    </View>
+                    </View> */}
 
                     {/* Sign up */}
-                    <TouchableOpacity
+                    {/* <TouchableOpacity
                         style={styles.signupRow}
                         onPress={() => navigation.navigate('Registration')}
                         activeOpacity={0.85}
@@ -1114,7 +1189,7 @@ const NewLoginScreen = () => {
                             <Text style={styles.signupLink}>{t('createAccount')}</Text>
                             <Text style={styles.signupArrow}>→</Text>
                         </View>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                 </View>
             </ScrollView>
 
@@ -1861,7 +1936,7 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         letterSpacing: 0.2,
     },
-     agreementTextContainer: {
+    agreementTextContainer: {
         marginTop: 12,
         marginBottom: 12,
         paddingVertical: 12,

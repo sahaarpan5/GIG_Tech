@@ -868,7 +868,7 @@ const ReadOnlyField = ({
                 {value || '-'}
             </Text>
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
                 style={styles.changeBtn}
                 onPress={onChangeRequest}
                 activeOpacity={0.8}
@@ -876,7 +876,7 @@ const ReadOnlyField = ({
                 <Text style={styles.changeBtnText}>
                     {changeLabel}
                 </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
         </View>
     </View>
 );

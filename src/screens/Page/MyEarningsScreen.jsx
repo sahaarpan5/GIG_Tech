@@ -34,9 +34,9 @@ const EARNINGS_TRANSLATIONS = {
         dateRequired: 'Please select both dates',
         invalidRange: 'Start date must be before end date',
         ok: 'OK',
-        disbursementAmount: 'Disbursement Amount',
+        disbursementAmount: 'Payment Amount',
         transactionMode: 'Transaction Mode',
-        disbursementDate: 'Disbursement Date',
+        disbursementDate: 'Payment Date',
         transactions: 'Transactions',
     },
     Hindi: {
@@ -72,9 +72,9 @@ const EARNINGS_TRANSLATIONS = {
         dateRequired: 'অনুগ্রহ করে উভয় তারিখ দিন',
         invalidRange: 'শুরুর তারিখ শেষের আগে হতে হবে',
         ok: 'ঠিক আছে',
-        disbursementAmount: 'বিতরণের পরিমাণ',
+        disbursementAmount: 'অর্থপ্রদানের পরিমাণ',
         transactionMode: 'লেনদেনের ধরন',
-        disbursementDate: 'বিতরণের তারিখ',
+        disbursementDate: 'পরিশোধের তারিখ',
         transactions: 'লেনদেন',
     },
 };

@@ -376,7 +376,7 @@ const NewDashboardScreen = () => {
 
                 Alert.alert(
                     'Success',
-                    response.data?.Message || 'Consent saved successfully.',
+                     'Consent saved successfully.',
                     [
                         {
                             text: 'OK',
@@ -486,7 +486,7 @@ const NewDashboardScreen = () => {
             if (response.data?.Status === true) {
                 Alert.alert(
                     'Success',
-                    response.data?.Message || 'Worker activity saved successfully.',
+                    'Activity saved successfully.',
                     [
                         {
                             text: 'OK',
@@ -500,7 +500,7 @@ const NewDashboardScreen = () => {
             } else {
                 Alert.alert(
                     'Failed',
-                    response.data?.Message || 'Unable to save worker activity.'
+                    response.data?.Message || 'Unable to save activity.'
                 );
             }
 
@@ -973,14 +973,14 @@ const NewDashboardScreen = () => {
                         value={slData.startDate || '-'}
                     />
 
-                    <DetailRow
+                    {/* <DetailRow
                         icon={require('../../assets/red-flag.png')}
                         iconBg="#FFEBF0"
                         iconColor="#E63E6D"
                         label={t('endDate')}
                         value={slData.endDate || '-'}
                         last
-                    />
+                    /> */}
 
                     <TouchableOpacity
                         style={styles.primaryButton}
