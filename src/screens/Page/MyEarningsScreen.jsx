@@ -218,6 +218,7 @@ const MyEarningsScreen = ({ navigation }) => {
                     timeout: 30000,
                 }
             );
+            console.log('Disbursement API Response:', response.data);
 
             if (response.data?.Status === true) {
                 const apiData = response.data.Data;
@@ -346,6 +347,14 @@ const MyEarningsScreen = ({ navigation }) => {
                     <Text style={styles.detailLabel}>{t('disbursementDate')}</Text>
                     <Text style={styles.detailValue}>
                         {formatDate(item.Disbursement_Date)}
+                    </Text>
+                </View>
+
+                <View style={styles.utrDetailsContainer}>
+                    <Text style={styles.detailLabel}>UTR Details</Text>
+
+                    <Text style={styles.utrDetailsValue}>
+                        {String(item.UTR_Data || '—').trim()}
                     </Text>
                 </View>
 
@@ -1147,6 +1156,21 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#0A2E33',
         marginTop: 12,
+    },
+    utrDetailsContainer: {
+        paddingVertical: 8,
+        marginTop: 4,
+        borderTopWidth: 1,
+        borderTopColor: '#F2F5F6',
+    },
+
+    utrDetailsValue: {
+        fontFamily: 'InstrumentSans-Regular',
+        fontSize: 12,
+        color: '#0A2E33',
+        lineHeight: 19,
+        marginTop: 6,
+        textAlign: 'left',
     },
 });
 
